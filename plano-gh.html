@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Plano GH">
+<meta name="theme-color" content="#0d1f0d">
+<title>Plano GH 30 Dias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --g0:#0d1f0d;--g1:#1a2e1a;--g2:#2D6A4F;--g3:#52B788;--g4:#95D5B2;--g5:#D8F3DC;
+  --amber:#D4A017;--coral:#C75643;--purple:#7B5EA7;
+  --cream:#FAF7F2;--tm:#4a6741;--ts:#7a9170;
+  --st: env(safe-area-inset-top);--sb: env(safe-area-inset-bottom);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--g0);color:var(--cream)}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;z-index:999;background:var(--g0);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s}
+#splash.gone{opacity:0;pointer-events:none}
+.splash-icon{width:90px;height:90px;border-radius:24px;background:linear-gradient(135deg,var(--g2),var(--g3));display:flex;align-items:center;justify-content:center;font-size:2.8rem;margin-bottom:20px;box-shadow:0 16px 48px rgba(82,183,136,.35)}
+#splash h1{font-family:'DM Serif Display',serif;font-size:2.2rem;color:var(--g3);letter-spacing:-1px}
+#splash p{color:var(--ts);font-size:.85rem;margin-top:8px}
+
+/* LAYOUT */
+#app{height:100%;display:flex;flex-direction:column}
+.header{padding:calc(var(--st) + 14px) 18px 10px;background:rgba(13,31,13,.97);border-bottom:1px solid rgba(82,183,136,.15);backdrop-filter:blur(12px);flex-shrink:0}
+.h-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.h-title{font-family:'DM Serif Display',serif;font-size:1.35rem;color:var(--g3)}
+.h-badge{font-size:.65rem;font-weight:600;background:rgba(82,183,136,.12);border:1px solid rgba(82,183,136,.25);color:var(--g4);padding:4px 10px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
+.week-tabs{display:flex;gap:6px}
+.wtab{flex:1;padding:8px 4px;text-align:center;font-size:.72rem;font-weight:500;border-radius:10px;border:1px solid rgba(82,183,136,.18);background:transparent;color:var(--ts);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.wtab.active{background:var(--g2);color:#fff;border-color:var(--g2);box-shadow:0 4px 14px rgba(45,106,79,.4)}
+
+.day-strip{display:flex;gap:7px;padding:10px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;background:rgba(13,31,13,.95);border-bottom:1px solid rgba(82,183,136,.08);scrollbar-width:none;flex-shrink:0}
+.day-strip::-webkit-scrollbar{display:none}
+.dpill{flex-shrink:0;padding:6px 13px;font-size:.72rem;font-weight:500;border-radius:20px;border:1px solid rgba(82,183,136,.18);background:transparent;color:var(--ts);cursor:pointer;transition:all .2s;white-space:nowrap;font-family:'DM Sans',sans-serif}
+.dpill.active{background:rgba(82,183,136,.15);border-color:var(--g3);color:var(--g3)}
+
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 15px calc(var(--sb) + 76px)}
+
+/* DAY HERO */
+.hero{background:linear-gradient(135deg,rgba(45,106,79,.28),rgba(82,183,136,.08));border:1px solid rgba(82,183,136,.18);border-radius:16px;padding:15px 17px;margin-bottom:14px}
+.hero-name{font-family:'DM Serif Display',serif;font-size:1.25rem;color:var(--g3)}
+.hero-sub{font-size:.75rem;color:var(--ts);margin-top:3px}
+.macros{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.mc{background:rgba(0,0,0,.25);border-radius:10px;padding:8px 4px;text-align:center}
+.mv{font-size:.95rem;font-weight:600;color:var(--g4)}
+.ml{font-size:.6rem;color:var(--ts);margin-top:2px}
+
+/* MEAL CARD */
+.meal{background:rgba(26,46,26,.75);border:1px solid rgba(82,183,136,.1);border-radius:14px;margin-bottom:9px;overflow:hidden;cursor:pointer;transition:border-color .2s}
+.meal.open{border-color:rgba(82,183,136,.3);background:rgba(45,106,79,.18)}
+.meal-head{display:flex;align-items:center;gap:8px;padding:13px 14px 10px;position:relative}
+.mbadge{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;padding:3px 9px;border-radius:20px}
+.bc{background:rgba(212,160,23,.18);color:var(--amber);border:1px solid rgba(212,160,23,.28)}
+.ba{background:rgba(82,183,136,.18);color:var(--g3);border:1px solid rgba(82,183,136,.28)}
+.bj{background:rgba(123,94,167,.18);color:#B39DDB;border:1px solid rgba(123,94,167,.28)}
+.bl{background:rgba(199,86,67,.18);color:#EF9A9A;border:1px solid rgba(199,86,67,.28)}
+.bce{background:rgba(74,103,65,.25);color:var(--g4);border:1px solid rgba(74,103,65,.38)}
+.gh-tag{font-size:.58rem;font-weight:600;color:var(--g3);background:rgba(82,183,136,.12);border:1px solid rgba(82,183,136,.25);padding:2px 7px;border-radius:10px}
+.mtime{font-size:.68rem;color:var(--ts);margin-left:auto}
+.chev{font-size:.7rem;color:var(--ts);transition:transform .22s;margin-left:6px}
+.meal.open .chev{transform:rotate(180deg)}
+.mname{font-family:'DM Serif Display',serif;font-size:1rem;color:var(--cream);padding:0 14px 4px}
+.mpreview{font-size:.76rem;color:var(--ts);padding:0 14px 12px;line-height:1.5}
+.meal.open .mpreview{display:none}
+.mitems{font-size:.8rem;color:var(--tm);padding:4px 14px 14px;line-height:1.7;display:none;border-top:1px solid rgba(82,183,136,.1);margin-top:4px;padding-top:12px}
+.meal.open .mitems{display:block}
+.meal-bar{width:3px;position:absolute;left:0;top:0;bottom:0}
+
+/* TIP */
+.tip{background:rgba(45,106,79,.15);border-left:3px solid var(--g3);border-radius:0 12px 12px 0;padding:11px 13px;margin-top:4px;font-size:.8rem;color:var(--g5);line-height:1.65}
+.tip-lbl{font-size:.6rem;font-weight:600;color:var(--g3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+
+/* JEJUM BADGE */
+.jejum-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(212,160,23,.12);border:1px solid rgba(212,160,23,.25);color:var(--amber);border-radius:10px;padding:6px 12px;font-size:.75rem;font-weight:500;margin-bottom:14px}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;padding:8px 16px calc(var(--sb) + 8px);background:rgba(10,24,10,.97);border-top:1px solid rgba(82,183,136,.12);backdrop-filter:blur(14px);display:flex;gap:6px}
+.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--ts);cursor:pointer;font-size:.68rem;font-family:'DM Sans',sans-serif;transition:all .2s}
+.nbtn.active{background:rgba(82,183,136,.1);color:var(--g3);border-color:rgba(82,183,136,.25)}
+.nicon{font-size:1.15rem}
+
+/* PAGES */
+.page{display:none}
+.page.active{display:block}
+
+/* PERFIL PAGE */
+.perfil-card{background:rgba(26,46,26,.8);border:1px solid rgba(82,183,136,.15);border-radius:16px;padding:16px;margin-bottom:12px}
+.perfil-title{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--g3);margin-bottom:12px}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(82,183,136,.08);font-size:.82rem}
+.info-row:last-child{border-bottom:none}
+.info-lbl{color:var(--ts)}
+.info-val{color:var(--cream);font-weight:500}
+.info-val.ok{color:var(--g3)}
+.info-val.warn{color:var(--amber)}
+.progress-bar-wrap{margin-top:6px}
+.pbar-lbl{display:flex;justify-content:space-between;font-size:.72rem;color:var(--ts);margin-bottom:5px}
+.pbar{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.pfill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--g2),var(--g3));transition:width .8s ease}
+
+.nutrientes-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nut-card{background:rgba(26,46,26,.8);border:1px solid rgba(82,183,136,.12);border-radius:12px;padding:12px}
+.nut-icon{font-size:1.3rem;margin-bottom:6px}
+.nut-name{font-size:.72rem;color:var(--ts);margin-bottom:3px}
+.nut-val{font-size:1rem;font-weight:600;color:var(--g4)}
+.nut-desc{font-size:.65rem;color:var(--ts);margin-top:3px;line-height:1.4}
+
+.install-box{background:linear-gradient(135deg,rgba(45,106,79,.3),rgba(82,183,136,.1));border:1px solid rgba(82,183,136,.25);border-radius:14px;padding:15px;margin-bottom:12px;font-size:.8rem;color:var(--g5);line-height:1.7}
+.install-title{font-family:'DM Serif Display',serif;font-size:1rem;color:var(--g3);margin-bottom:8px}
+
+/* REGRAS */
+.regras-section{margin-bottom:16px}
+.regra-card{background:rgba(26,46,26,.7);border:1px solid rgba(82,183,136,.1);border-radius:12px;padding:13px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+.regra-num{width:26px;height:26px;border-radius:50%;background:var(--g2);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:600;flex-shrink:0;margin-top:1px}
+.regra-txt{font-size:.8rem;color:var(--tm);line-height:1.6}
+.regra-txt strong{color:var(--cream);font-weight:500}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-icon">🌿</div>
+  <h1>Plano GH</h1>
+  <p>30 dias · Otimização hormonal</p>
+</div>
+
+<div id="app">
+  <div class="header">
+    <div class="h-top">
+      <span class="h-title">Plano GH 30 Dias</span>
+      <span class="h-badge">~1.950 kcal</span>
+    </div>
+    <div class="week-tabs" id="weekTabs"></div>
+  </div>
+  <div class="day-strip" id="dayStrip"></div>
+
+  <div class="scroll" id="mainScroll">
+    <div class="page active" id="page-cardapio"></div>
+    <div class="page" id="page-perfil"></div>
+    <div class="page" id="page-regras"></div>
+  </div>
+</div>
+
+<div class="bnav">
+  <button class="nbtn active" onclick="showPage('cardapio',this)"><span class="nicon">🥗</span>Cardápio</button>
+  <button class="nbtn" onclick="showPage('perfil',this)"><span class="nicon">👤</span>Perfil</button>
+  <button class="nbtn" onclick="showPage('regras',this)"><span class="nicon">📋</span>Regras GH</button>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const DAYS_PT = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+const WEEK_LABELS = ['Semana 1','Semana 2','Semana 3','Semana 4'];
+
+// Macro padrão ajustado: ~1950 kcal, 160g prot, 190g carb, 65g gord
+const MAC = {kcal:'~1.950',prot:'160g',carb:'190g',gord:'65g'};
+// Macro jejum: ~1.600 kcal janela menor
+const MACJ = {kcal:'~1.600',prot:'150g',carb:'150g',gord:'60g'};
+
+function M(tipo,time,nome,itens,gh=true){return{tipo,time,nome,itens,gh}}
+
+const DATA = {
+// ── SEMANA 1 ─────────────────────────────────────────────────────────────────
+'1-1':{day:'Segunda · Dia 1',jejum:false,mac:MAC,tip:'Dia 1: evite carbs simples à noite. O GH é liberado no pico do sono — a ceia leve com triptofano (banana) favorece esse processo.',meals:[
+  M('cafe','07:00','Café da Manhã','3 ovos mexidos com cúrcuma · Aveia (40g) com mirtilos · Café preto sem açúcar'),
+  M('lanche','10:00','Lanche Manhã','1 punhado de castanhas (25g) · 1 maçã verde'),
+  M('almoco','12:30','Almoço','Frango grelhado (160g) · Arroz integral (3 col) · Salada: beterraba, folhas verdes, azeite · Limão'),
+  M('lanche','16:00','Lanche Tarde','Iogurte grego natural (130g) · Sementes de abóbora (15g) · Morangos'),
+  M('jantar','19:00','Jantar','Salmão (130g) com gengibre e alho · Brócolis no vapor · Azeite extra virgem'),
+  M('ceia','21:00','Ceia','1 banana média · 1 col chá de amendoim integral',false),
+]},
+'1-2':{day:'Terça · Dia 2',jejum:false,mac:MAC,tip:'Cereja ácida é fonte natural de melatonina — potencializa a liberação noturna de GH. Evite telas 1h antes do sono.',meals:[
+  M('cafe','07:00','Café da Manhã','2 ovos cozidos · Pão integral (1 fatia) com abacate amassado · Chá verde'),
+  M('lanche','10:00','Lanche Manhã','Amendoim natural (25g) · 1 pera'),
+  M('almoco','12:30','Almoço','Atum ao natural (1 lata) · Lentilha cozida (4 col) · Cenoura ralada · Azeite e limão'),
+  M('lanche','16:00','Lanche Tarde','Whey protein (1 dose/25g) com água · Castanhas mistas (15g)'),
+  M('jantar','19:00','Jantar','Frango cozido desfiado (140g) · Purê de abóbora (sem manteiga) · Salada verde com gengibre'),
+  M('ceia','21:00','Ceia','Cereja (80g) ou suco de cereja sem açúcar · Chá de camomila',false),
+]},
+'1-3':{day:'Quarta · Dia 3',jejum:false,mac:MAC,tip:'Compacte as refeições em 10h se possível (ex: 7h–19h). O jejum de 12–14h noturno já potencializa o GH.',meals:[
+  M('cafe','07:00','Café da Manhã','Omelete (3 ovos) com espinafre e tomate · Chá verde com gengibre'),
+  M('lanche','10:00','Lanche Manhã','Iogurte grego (130g) · Sementes de abóbora (15g)'),
+  M('almoco','12:30','Almoço','Tilápia grelhada (160g) · Quinoa (3 col) · Salada de beterraba com hortelã · Azeite'),
+  M('lanche','16:00','Lanche Tarde','Castanhas (20g) · Framboesas ou açaí sem açúcar (80g)'),
+  M('jantar','19:00','Jantar','Grão-de-bico (4 col) · Peito de frango (100g) grelhado · Brócolis com alho e azeite'),
+  M('ceia','21:00','Ceia','1 banana · Chá de valeriana',false),
+]},
+'1-4':{day:'Quinta · Dia 4',jejum:false,mac:MAC,tip:'Cúrcuma reduz inflamação sistêmica, que suprime a somatostatina (hormônio que bloqueia o GH). Combine com pimenta-do-reino para melhor absorção.',meals:[
+  M('cafe','07:00','Café da Manhã','3 ovos estrelados · Aveia (40g) com chia e mirtilos · Café preto'),
+  M('lanche','10:00','Lanche Manhã','Mix de oleaginosas (25g) · 1 maçã'),
+  M('almoco','12:30','Almoço','Contrafilé magro (130g) grelhado · Feijão preto (3 col) · Salada verde com tomate e azeite'),
+  M('lanche','16:00','Lanche Tarde','Whey (1 dose) · Amendoim (15g)'),
+  M('jantar','19:00','Jantar','Salmão (130g) com cúrcuma e limão · Espinafre refogado · Azeite'),
+  M('ceia','21:00','Ceia','Cereja (80g) · Chá de camomila',false),
+]},
+'1-5':{day:'Sexta · Dia 5',jejum:false,mac:MAC,tip:'Treino de força hoje amplifica o GH. O pico pós-treino + sono profundo cria o maior estímulo natural possível.',meals:[
+  M('cafe','07:00','Café da Manhã','Vitamina: aveia (35g) + banana + whey (25g) + leite vegetal · Sementes de abóbora'),
+  M('lanche','10:00','Lanche Manhã','Castanhas (25g) · Morangos (80g)'),
+  M('almoco','12:30','Almoço','Atum grelhado (160g) · Arroz integral (3 col) · Beterraba assada · Salada com azeite'),
+  M('lanche','16:00','Lanche Tarde','Iogurte grego (130g) · Granola sem açúcar (15g) · Mirtilos'),
+  M('jantar','19:00','Jantar','Frango ao forno com ervas (140g) · Lentilha ao curry leve · Couve refogada'),
+  M('ceia','21:00','Ceia','1 banana · 1 col chá de pasta de amendoim natural',false),
+]},
+'1-6':{day:'Sábado · Dia 6',jejum:false,mac:MAC,tip:'Dia de recarga moderada. Pode adicionar 1 porção extra de carb no almoço. Jantar leve sempre — o GH noturno agradece.',meals:[
+  M('cafe','08:00','Café da Manhã','3 ovos mexidos · Abacate (1/3) · Pão integral (1 fatia) · Café preto'),
+  M('lanche','10:30','Lanche Manhã','Castanhas do Pará (3 un) · 1 laranja'),
+  M('almoco','13:00','Almoço','Frango assado com cúrcuma (180g) · Quinoa (4 col) · Salada caprese com azeite · Suco de beterraba'),
+  M('lanche','16:00','Lanche Tarde','Whey (1 dose) · Frutas vermelhas (80g)'),
+  M('jantar','19:30','Jantar','Tilápia grelhada (130g) · Grão-de-bico com legumes · Couve com azeite'),
+  M('ceia','21:00','Ceia','Iogurte grego (80g) · 1 fio de mel puro',false),
+]},
+'1-7':{day:'Domingo · Dia 7',jejum:false,mac:MAC,tip:'Fim da Semana 1. Avalie: menos inchaço, mais disposição ao acordar, sono mais profundo — sinais de GH otimizado.',meals:[
+  M('cafe','08:30','Café da Manhã','Panqueca de aveia e banana (1 un grande) · 2 ovos mexidos · Café preto com canela'),
+  M('lanche','11:00','Lanche Manhã','Mix de castanhas (25g) · Açaí sem açúcar (80g)'),
+  M('almoco','13:30','Almoço','Carne bovina magra (130g) · Lentilha com cenoura (4 col) · Arroz integral (2 col) · Salada verde'),
+  M('lanche','16:00','Lanche Tarde','Iogurte grego (130g) · Sementes de abóbora · Morangos'),
+  M('jantar','19:30','Jantar','Sopa de frango com legumes e gengibre · Pão integral (1 fatia)'),
+  M('ceia','21:00','Ceia','Cereja (80g) · Chá de camomila sem açúcar',false),
+]},
+// ── SEMANA 2 ─────────────────────────────────────────────────────────────────
+'2-1':{day:'Segunda · Dia 8',jejum:false,mac:MAC,tip:'Semana 2: introduza jejum 16/8 em 2 dias. Aumenta GH em até 200% segundo estudos em homens adultos.',meals:[
+  M('cafe','07:00','Café da Manhã','3 ovos + espinafre · Aveia (40g) com banana · Chá verde com gengibre'),
+  M('lanche','10:00','Lanche Manhã','Pasta de amendoim (1 col chá) · 1 torrada integral'),
+  M('almoco','12:30','Almoço','Sardinha (1 lata) · Quinoa (3 col) · Salada: alface, tomate, beterraba, azeite'),
+  M('lanche','16:00','Lanche Tarde','Whey (1 dose) · Castanhas (20g)'),
+  M('jantar','19:00','Jantar','Frango com cúrcuma (140g) · Brócolis · Grão-de-bico (3 col)'),
+  M('ceia','21:00','Ceia','Banana + chá de erva-cidreira',false),
+]},
+'2-2':{day:'Terça · Dia 9',jejum:false,mac:MAC,tip:'Batata-doce pós-treino é ideal — repõe glicogênio sem pico glicêmico. Evite arroz branco no jantar para não suprimir o GH noturno.',meals:[
+  M('cafe','07:00','Café da Manhã','Vitamina: whey (25g) + aveia (35g) + mirtilos + leite de amêndoa · Castanhas'),
+  M('lanche','10:00','Lanche Manhã','Iogurte grego (150g) · Sementes de abóbora · Framboesas'),
+  M('almoco','12:30','Almoço','Salmão (160g) ao forno com limão · Batata-doce (1 média) · Salada verde'),
+  M('lanche','16:00','Lanche Tarde','Amendoim (25g) · 1 laranja'),
+  M('jantar','19:00','Jantar','Lentilha com legumes (4 col) · Ovo cozido (2 un) · Folhas verdes · Azeite'),
+  M('ceia','21:00','Ceia','Cereja (80g) · Chá de camomila',false),
+]},
+'2-3':{day:'Quarta · Dia 10',jejum:true,mac:MACJ,tip:'1º Jejum 16/8: nas primeiras 12h sem comer, o GH começa a subir. Nas 16h, pode atingir 500% acima do basal. Beba 2L+ de água.',meals:[
+  M('cafe','12:00','Quebra do Jejum (12h)','3 ovos mexidos · Abacate (1/3) · Mix de castanhas (20g) · Café preto'),
+  M('lanche','14:30','Lanche 1','Frango grelhado (140g) · Beterraba cozida · Azeite'),
+  M('almoco','16:30','Refeição Principal','Atum (1 lata) · Grão-de-bico (4 col) · Salada farta com sementes de abóbora'),
+  M('lanche','18:30','Lanche 2','Iogurte grego (130g) · Morangos · Sementes de linhaça'),
+  M('jantar','20:00','Última Refeição — encerra às 20h','Salmão (120g) · Brócolis refogado · Azeite extra virgem'),
+  M('ceia','-','Ceia','⛔ Sem ceia — apenas água, chá e café sem açúcar após 20h',false),
+]},
+'2-4':{day:'Quinta · Dia 11',jejum:false,mac:MAC,tip:'Recuperação pós-jejum. Reintroduza carbs com cuidado. Arroz integral + feijão formam proteína completa — ótimo estímulo anabólico.',meals:[
+  M('cafe','07:00','Café da Manhã','3 ovos estrelados · Pão integral com pasta de amendoim · Chá verde'),
+  M('lanche','10:00','Lanche Manhã','Whey (1 dose) · Castanhas mistas (20g)'),
+  M('almoco','12:30','Almoço','Frango desfiado (160g) · Feijão-carioca (3 col) · Arroz integral (2 col) · Salada verde'),
+  M('lanche','16:00','Lanche Tarde','Iogurte grego (130g) · Mirtilos · Granola sem açúcar (10g)'),
+  M('jantar','19:00','Jantar','Omelete (3 ovos) com cúrcuma, tomate e couve · Sementes de abóbora'),
+  M('ceia','21:00','Ceia','Banana + chá de valeriana',false),
+]},
+'2-5':{day:'Sexta · Dia 12',jejum:false,mac:MAC,tip:'2º Jejum 16/8 da semana. Se estiver seguindo, seu GH basal já está mais elevado. Sinal: acordar com mais energia e menos fome matinal.',meals:[
+  M('cafe','07:00','Café da Manhã','Açaí (120g) sem açúcar com granola (10g), banana (1/2) e sementes · Café preto'),
+  M('lanche','10:00','Lanche Manhã','Castanhas (20g) · 1 tangerina'),
+  M('almoco','12:30','Almoço','Tilápia (160g) com ervas · Lentilha (4 col) · Salada de beterraba e cenoura'),
+  M('lanche','16:00','Lanche Tarde','Whey (1 dose) · Amendoim (20g)'),
+  M('jantar','19:00','Jantar','Carne moída magra (130g) com brócolis e pimentão · Azeite'),
+  M('ceia','21:00','Ceia','Cereja (80g) · Chá de camomila',false),
+]},
+'2-6':{day:'Sábado · Dia 13',jejum:false,mac:MAC,tip:'Treino pesado recomendado. Treino em jejum curto (4h sem comer) + refeição proteica logo após = pico máximo de GH.',meals:[
+  M('cafe','08:00','Café da Manhã','Panqueca de aveia (1 un) · 2 ovos mexidos · Abacate (1/4) · Café preto'),
+  M('lanche','10:30','Lanche Manhã','Iogurte grego (150g) · Mirtilos · Sementes de abóbora'),
+  M('almoco','13:00','Almoço','Picanha magra (130g) · Salada farta com beterraba e cenoura · Arroz integral (3 col)'),
+  M('lanche','16:00','Lanche Tarde','Castanhas mistas (25g) · Framboesas ou açaí (80g)'),
+  M('jantar','19:30','Jantar','Salmão (130g) grelhado · Grão-de-bico com azeite e limão · Brócolis'),
+  M('ceia','21:00','Ceia','1 banana · 1 col pasta de amendoim',false),
+]},
+'2-7':{day:'Domingo · Dia 14',jejum:false,mac:MAC,tip:'14 dias! Se está seguindo o plano: sono mais reparador, menos gordura visceral e recuperação muscular mais rápida são os sinais esperados.',meals:[
+  M('cafe','09:00','Café da Manhã','Omelete (3 ovos) com cogumelos e ervas · Torrada integral (1) · Café com canela'),
+  M('lanche','11:30','Lanche Manhã','Mix de oleaginosas (25g) · 1 maçã'),
+  M('almoco','13:30','Almoço','Frango assado (170g) · Feijão-preto (3 col) · Couve refogada · Arroz integral (2 col)'),
+  M('lanche','16:00','Lanche Tarde','Whey (1 dose) · Sementes de abóbora (15g)'),
+  M('jantar','19:30','Jantar','Sopa de lentilha com cúrcuma e gengibre · Pão integral (1 fatia)'),
+  M('ceia','21:00','Ceia','Cereja (80g) · Chá de camomila',false),
+]},
+// ── SEMANA 3 ─────────────────────────────────────────────────────────────────
+'3-1':{day:'Segunda · Dia 15',jejum:false,mac:MAC,tip:'Semana 3: intensifique para 3 dias de jejum 16/8. Se possível, adicione L-Arginina (3g antes do treino) — estímulo direto ao GH.',meals:[
+  M('cafe','07:00','Café da Manhã','3 ovos mexidos com cúrcuma · Aveia (40g) · Mirtilos e chia · Café preto'),
+  M('lanche','10:00','Lanche Manhã','Amendoim (25g) · 1 banana (pequena)'),
+  M('almoco','12:30','Almoço','Salmão (160g) · Quinoa (3 col) · Salada beterraba, rúcula, sementes de abóbora, azeite'),
+  M('lanche','16:00','Lanche Tarde','Whey (1 dose) · Castanhas (20g)'),
+  M('jantar','19:00','Jantar','Frango (140g) com alho e limão · Lentilha temperada · Brócolis no vapor'),
+  M('ceia','21:00','Ceia','Banana + chá de camomila',false),
+]},
+'3-2':{day:'Terça · Dia 16',jejum:false,mac:MAC,tip:'Cacau puro (>70%) contém triptofano e melhora o sono profundo. Use na vitamina, nunca como chocolate ao leite.',meals:[
+  M('cafe','07:00','Café da Manhã','Vitamina: abacate (1/4) + leite de amêndoa + whey (25g) + cacau puro (1 col) · Castanhas'),
+  M('lanche','10:00','Lanche Manhã','Iogurte grego (150g) · Framboesas · Sementes de abóbora'),
+  M('almoco','12:30','Almoço','Atum grelhado (160g) · Grão-de-bico com alho e azeite (4 col) · Salada verde farta'),
+  M('lanche','16:00','Lanche Tarde','Amendoim (25g) · 1 maçã verde'),
+  M('jantar','19:00','Jantar','Carne bovina magra (130g) · Batata-doce (1 média) · Couve refogada · Azeite'),
+  M('ceia','21:00','Ceia','Cereja (80g) · Chá de erva-cidreira',false),
+]},
+'3-3':{day:'Quarta · Dia 17',jejum:true,mac:MACJ,tip:'2º dia de jejum da semana 3. O corpo já adaptado: menos fome, mais clareza mental e GH elevado. Continue com 2L+ de água.',meals:[
+  M('cafe','12:00','Quebra do Jejum','3 ovos mexidos + abacate (1/4) + castanhas (20g) · Café preto'),
+  M('lanche','14:00','Lanche 1','Frango grelhado (140g) · Beterraba com limão'),
+  M('almoco','16:00','Refeição Principal','Salmão (140g) · Lentilha (4 col) · Salada verde com sementes de abóbora · Azeite'),
+  M('lanche','18:30','Lanche 2','Iogurte grego (130g) · Mirtilos · Whey (1/2 dose)'),
+  M('jantar','20:00','Última Refeição','Omelete (2 ovos) com espinafre · Grão-de-bico (3 col) · Encerra às 20h'),
+  M('ceia','-','Ceia','⛔ Sem ceia — jejum até 12h do dia seguinte',false),
+]},
+'3-4':{day:'Quinta · Dia 18',jejum:false,mac:MAC,tip:'Açaí é antioxidante potente. Reduz cortisol (inimigo do GH). Sempre sem açúcar ou guaraná — versão pura apenas.',meals:[
+  M('cafe','07:00','Café da Manhã','3 ovos + pão integral (1 fatia) · Pasta de amendoim (1 col chá) · Chá verde com gengibre'),
+  M('lanche','10:00','Lanche Manhã','Whey (1 dose) · Castanhas (20g)'),
+  M('almoco','12:30','Almoço','Frango desfiado (160g) · Feijão (3 col) · Arroz integral (2 col) · Salada com beterraba'),
+  M('lanche','16:00','Lanche Tarde','Açaí (120g) sem açúcar · Granola sem açúcar (10g) · Sementes'),
+  M('jantar','19:00','Jantar','Tilápia (140g) com cúrcuma · Quinoa (3 col) · Couve refogada'),
+  M('ceia','21:00','Ceia','1 banana + chá de valeriana',false),
+]},
+'3-5':{day:'Sexta · Dia 19',jejum:true,mac:MACJ,tip:'3 jejuns 16/8 na semana = máximo estímulo. Estudos mostram aumento de GH basal em 300–500% em homens com jejum regular.',meals:[
+  M('cafe','12:00','Quebra do Jejum (3º da semana)','3 ovos · Abacate (1/4) · Mix de castanhas (20g) · Café preto'),
+  M('lanche','14:00','Lanche 1','Iogurte grego (150g) · Mirtilos · Sementes de abóbora'),
+  M('almoco','16:30','Refeição Principal','Salmão (160g) · Grão-de-bico (4 col) · Salada farta com beterraba'),
+  M('lanche','18:30','Lanche 2','Whey (1 dose) · Amendoim (20g)'),
+  M('jantar','20:00','Última Refeição','Frango (130g) com limão e ervas · Lentilha (3 col) · Encerra às 20h'),
+  M('ceia','-','Ceia','⛔ Sem ceia — jejum noturno completo',false),
+]},
+'3-6':{day:'Sábado · Dia 20',jejum:false,mac:MAC,tip:'Refeição livre permitida no almoço — coma o que quiser (com moderação). A consistência das outras refeições compensa. Sem culpa.',meals:[
+  M('cafe','08:00','Café da Manhã','3 ovos mexidos · Aveia (40g) com mirtilos e chia · Café preto'),
+  M('lanche','10:30','Lanche Manhã','Castanhas (25g) · 1 laranja'),
+  M('almoco','13:00','Almoço','Contrafilé (130g) grelhado · Batata-doce (1 média) · Salada verde com azeite e vinagre de maçã'),
+  M('lanche','16:00','Lanche Tarde','Whey (1 dose) · Morangos (80g)'),
+  M('jantar','19:30','Jantar','Omelete (3 ovos) com cúrcuma e espinafre · Grão-de-bico (3 col) assado'),
+  M('ceia','21:00','Ceia','Cereja (80g) · Chá de camomila',false),
+]},
+'3-7':{day:'Domingo · Dia 21',jejum:false,mac:MAC,tip:'21 dias! Você deve ter perdido 1,5–3% de gordura corporal. O GH elevado está remodelando sua composição lentamente.',meals:[
+  M('cafe','09:00','Café da Manhã','Vitamina: banana (1/2) + aveia (35g) + whey (25g) + leite vegetal · Sementes de chia'),
+  M('lanche','11:30','Lanche Manhã','Iogurte grego (150g) · Framboesas · Granola (10g)'),
+  M('almoco','13:30','Almoço','Frango assado (170g) · Arroz integral (3 col) · Feijão (3 col) · Salada completa'),
+  M('lanche','16:00','Lanche Tarde','Amendoim (25g) · Açaí (100g) puro'),
+  M('jantar','19:30','Jantar','Sopa de lentilha com cúrcuma e gengibre · Pão integral (1 fatia)'),
+  M('ceia','21:00','Ceia','1 banana · Chá de camomila',false),
+]},
+// ── SEMANA 4 ─────────────────────────────────────────────────────────────────
+'4-1':{day:'Segunda · Dia 22',jejum:false,mac:MAC,tip:'Semana final: consolide os hábitos. No mês 2, adicione zinco (15mg) e vitamina D3 (2.000 UI) para ampliar o efeito do GH.',meals:[
+  M('cafe','07:00','Café da Manhã','3 ovos mexidos com cúrcuma · Aveia (40g) · Mirtilos e chia · Café preto'),
+  M('lanche','10:00','Lanche Manhã','Whey (1 dose) · Castanhas (20g)'),
+  M('almoco','12:30','Almoço','Salmão (160g) · Lentilha (4 col) · Beterraba assada · Salada verde · Azeite'),
+  M('lanche','16:00','Lanche Tarde','Iogurte grego (150g) · Sementes de abóbora · Morangos'),
+  M('jantar','19:00','Jantar','Frango desfiado (140g) · Grão-de-bico (3 col) · Brócolis no vapor · Azeite'),
+  M('ceia','21:00','Ceia','Cereja (80g) · Chá de camomila',false),
+]},
+'4-2':{day:'Terça · Dia 23',jejum:false,mac:MAC,tip:'Queijo cottage é subestimado — rico em caseína (proteína lenta) e triptofano. Mantém aminoácidos elevados por horas após o café.',meals:[
+  M('cafe','07:00','Café da Manhã','Omelete (3 ovos) com tomate e queijo cottage · Pão integral (1 fatia) · Chá verde'),
+  M('lanche','10:00','Lanche Manhã','Amendoim (25g) · 1 pera'),
+  M('almoco','12:30','Almoço','Tilápia (160g) com gengibre · Quinoa (3 col) · Salada com beterraba e cenoura'),
+  M('lanche','16:00','Lanche Tarde','Whey (1 dose) · Framboesas (80g)'),
+  M('jantar','19:00','Jantar','Carne moída magra (130g) com alho · Lentilha (3 col) · Espinafre refogado'),
+  M('ceia','21:00','Ceia','1 banana · Chá de valeriana',false),
+]},
+'4-3':{day:'Quarta · Dia 24',jejum:true,mac:MACJ,tip:'Jejum domado. Perceba: fome controlada, energia estável, sono profundo. Isso é o GH trabalhando no seu organismo.',meals:[
+  M('cafe','12:00','Quebra do Jejum 16/8','3 ovos · Abacate (1/3) · Castanhas (20g) · Café preto'),
+  M('lanche','14:00','Lanche 1','Frango (140g) · Beterraba · Azeite e limão'),
+  M('almoco','16:30','Refeição Principal','Atum (1 lata) + Grão-de-bico (4 col) · Salada farta · Sementes de abóbora'),
+  M('lanche','18:30','Lanche 2','Iogurte grego (130g) · Morangos · Whey (1/2 dose)'),
+  M('jantar','20:00','Última Refeição','Salmão (120g) · Brócolis · Azeite — Encerra às 20h'),
+  M('ceia','-','Ceia','⛔ Jejum noturno — apenas água e chás sem açúcar',false),
+]},
+'4-4':{day:'Quinta · Dia 25',jejum:false,mac:MAC,tip:'Cogumelos (shiitake, paris) são ricos em zinco e vitamina D — ambos essenciais para síntese de GH. Adicione ao jantar regularmente.',meals:[
+  M('cafe','07:00','Café da Manhã','3 ovos mexidos · Aveia (40g) com mirtilos e chia · Café preto'),
+  M('lanche','10:00','Lanche Manhã','Mix de castanhas (25g) · 1 laranja'),
+  M('almoco','12:30','Almoço','Frango (170g) assado · Feijão (3 col) · Arroz integral (2 col) · Salada de beterraba'),
+  M('lanche','16:00','Lanche Tarde','Whey (1 dose) · Amendoim (20g)'),
+  M('jantar','19:00','Jantar','Omelete (3 ovos) com cúrcuma, espinafre e cogumelos · Sementes de abóbora'),
+  M('ceia','21:00','Ceia','1 banana · Chá de camomila',false),
+]},
+'4-5':{day:'Sexta · Dia 26',jejum:false,mac:MAC,tip:'Quase no fim! Se fez o programa, testosterona e GH estão mais elevados. Continue 2x/semana de jejum 16/8 indefinidamente.',meals:[
+  M('cafe','07:00','Café da Manhã','Vitamina: whey (25g) + aveia (35g) + banana (1/2) + pasta de amendoim + leite de amêndoa'),
+  M('lanche','10:00','Lanche Manhã','Iogurte grego (150g) · Sementes de abóbora · Framboesas'),
+  M('almoco','12:30','Almoço','Salmão (160g) · Quinoa (3 col) · Salada verde com beterraba e azeite'),
+  M('lanche','16:00','Lanche Tarde','Castanhas (25g) · Açaí (100g) puro'),
+  M('jantar','19:00','Jantar','Grão-de-bico (4 col) com azeite e ervas · Frango (110g) · Couve'),
+  M('ceia','21:00','Ceia','Cereja (80g) · Chá de camomila',false),
+]},
+'4-6':{day:'Sábado · Dia 27',jejum:false,mac:MAC,tip:'Penúltimo dia. Celebre com uma refeição que goste. A disciplina dos outros 6 dias é o que importa, não a perfeição no 7º.',meals:[
+  M('cafe','08:00','Café da Manhã','3 ovos · Pão integral com abacate e tomate · Café com canela · 1 laranja'),
+  M('lanche','10:30','Lanche Manhã','Castanhas mistas (25g) · Açaí (100g)'),
+  M('almoco','13:00','Almoço','Picanha magra (130g) grelhada · Arroz integral (3 col) · Feijão (3 col) · Salada completa'),
+  M('lanche','16:00','Lanche Tarde','Whey (1 dose) · Amendoim (20g) · Morangos'),
+  M('jantar','19:30','Jantar','Salmão (140g) com ervas e limão · Lentilha (3 col) · Brócolis'),
+  M('ceia','21:00','Ceia','1 banana · Pasta de amendoim (1 col chá) · Chá de erva-cidreira',false),
+]},
+'4-7':{day:'Domingo · Dia 28 🏁',jejum:false,mac:MAC,tip:'🏁 30 dias! Resultados esperados: −2 a 4kg de gordura, melhor recuperação muscular, sono profundo e mais disposição. Continue com jejum 2x/semana + proteína alta.',meals:[
+  M('cafe','09:00','Café da Manhã','Omelete proteico (3 ovos + cottage) · Aveia (35g) com mirtilos · Café preto'),
+  M('lanche','11:30','Lanche Manhã','Iogurte grego (150g) · Sementes de abóbora · Framboesas'),
+  M('almoco','13:30','Almoço de Encerramento','Salmão (180g) com ervas · Quinoa (4 col) · Salada beterraba, rúcula, sementes · Azeite'),
+  M('lanche','16:00','Lanche Tarde','Mix de castanhas (25g) · Açaí (120g) puro'),
+  M('jantar','19:30','Jantar Final','Frango (140g) com cúrcuma e gengibre · Lentilha (4 col) · Couve refogada'),
+  M('ceia','21:00','Ceia Final','Cereja (80g) · Chá de camomila 🌿',false),
+]},
+};
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let cW=1, cD=1, openMeal=-1;
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  setTimeout(()=>document.getElementById('splash').classList.add('gone'),1200);
+  buildWeekTabs(); buildDayStrip(); renderCardapio();
+  renderPerfil(); renderRegras();
+});
+
+function buildWeekTabs(){
+  const el=document.getElementById('weekTabs');
+  el.innerHTML=WEEK_LABELS.map((l,i)=>`<button class="wtab${i===0?' active':''}" onclick="setWeek(${i+1})">${l}</button>`).join('');
+}
+
+function buildDayStrip(){
+  const el=document.getElementById('dayStrip');
+  el.innerHTML=DAYS_PT.map((d,i)=>{
+    const dayNum=(cW-1)*7+(i+1);
+    const k=`${cW}-${i+1}`;
+    const isJ=DATA[k]&&DATA[k].jejum;
+    return `<button class="dpill${i===0?' active':''}" onclick="setDay(${i+1})">${d}${isJ?' ⚡':''}</button>`;
+  }).join('');
+}
+
+function setWeek(w){
+  cW=w; cD=1; openMeal=-1;
+  document.querySelectorAll('.wtab').forEach((b,i)=>b.classList.toggle('active',i===w-1));
+  buildDayStrip(); renderCardapio();
+}
+
+function setDay(d){
+  cD=d; openMeal=-1;
+  document.querySelectorAll('.dpill').forEach((b,i)=>b.classList.toggle('active',i===d-1));
+  renderCardapio();
+  document.getElementById('mainScroll').scrollTop=0;
+}
+
+function toggleMeal(i){
+  openMeal=openMeal===i?-1:i;
+  renderCardapio();
+}
+
+// ─── RENDER CARDAPIO ─────────────────────────────────────────────────────────
+function renderCardapio(){
+  const k=`${cW}-${cD}`;
+  const d=DATA[k]; if(!d) return;
+  const mac=d.mac;
+  const BADGE={cafe:'bc',almoco:'ba',jantar:'bj',lanche:'bl',ceia:'bce'};
+  const LABEL={cafe:'Café','almoco':'Almoço',jantar:'Jantar',lanche:'Lanche',ceia:'Ceia'};
+  const BAR={cafe:'var(--amber)',almoco:'var(--g3)',jantar:'var(--purple)',lanche:'var(--coral)',ceia:'var(--g2)'};
+
+  let html='';
+  if(d.jejum) html+=`<div class="jejum-badge">⚡ Dia de Jejum 16/8 — janela alimentar das 12h às 20h</div>`;
+
+  html+=`<div class="hero">
+    <div class="hero-name">${d.day}</div>
+    <div class="hero-sub">Plano ajustado · 1,70m · 90kg · 49 anos · IMC 31</div>
+    <div class="macros">
+      <div class="mc"><div class="mv">${mac.kcal}</div><div class="ml">kcal</div></div>
+      <div class="mc"><div class="mv">${mac.prot}</div><div class="ml">proteína</div></div>
+      <div class="mc"><div class="mv">${mac.carb}</div><div class="ml">carb</div></div>
+      <div class="mc"><div class="mv">${mac.gord}</div><div class="ml">gordura</div></div>
+    </div>
+  </div>`;
+
+  d.meals.forEach((m,i)=>{
+    const isOpen=openMeal===i;
+    const preview=m.itens.split('·')[0].trim()+'…';
+    html+=`<div class="meal ${m.tipo}${isOpen?' open':''}" onclick="toggleMeal(${i})">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;background:${BAR[m.tipo]}"></div>
+      <div class="meal-head">
+        <span class="mbadge ${BADGE[m.tipo]}">${LABEL[m.tipo]}</span>
+        ${m.gh?'<span class="gh-tag">↑ GH</span>':''}
+        <span class="mtime">${m.time}</span>
+        <span class="chev">▾</span>
+      </div>
+      <div class="mname">${m.nome}</div>
+      <div class="mpreview">${preview}</div>
+      <div class="mitems">${m.itens.replace(/·/g,'<br>· ')}</div>
+    </div>`;
+  });
+
+  html+=`<div class="tip"><div class="tip-lbl">💡 Dica do Dia</div>${d.tip}</div>`;
+  document.getElementById('page-cardapio').innerHTML=html;
+}
+
+// ─── RENDER PERFIL ───────────────────────────────────────────────────────────
+function renderPerfil(){
+  const imc=31.1;
+  const tmb=Math.round(88.36+(13.4*90)+(4.8*170)-(5.7*49));
+  const meta=Math.round(tmb*1.4*0.85);
+
+  document.getElementById('page-perfil').innerHTML=`
+    <div class="install-box">
+      <div class="install-title">📱 Adicionar à tela inicial (iPhone)</div>
+      1. Abra este arquivo no <strong>Safari</strong><br>
+      2. Toque no ícone de <strong>Compartilhar ↑</strong><br>
+      3. Selecione <strong>"Adicionar à Tela de Início"</strong><br>
+      4. O app aparece com ícone próprio 🌿
+    </div>
+
+    <div class="perfil-card">
+      <div class="perfil-title">Dados do Perfil</div>
+      <div class="info-row"><span class="info-lbl">Altura</span><span class="info-val">1,70 m</span></div>
+      <div class="info-row"><span class="info-lbl">Peso atual</span><span class="info-val">90 kg</span></div>
+      <div class="info-row"><span class="info-lbl">Idade</span><span class="info-val">49 anos</span></div>
+      <div class="info-row"><span class="info-lbl">IMC</span><span class="info-val warn">31,1 · Obesidade grau I</span></div>
+      <div class="info-row"><span class="info-lbl">Peso ideal</span><span class="info-val ok">65–75 kg</span></div>
+      <div class="info-row"><span class="info-lbl">Meta de peso (30d)</span><span class="info-val ok">−2 a 4 kg</span></div>
+      <div class="info-row"><span class="info-lbl">TMB (Harris-Benedict)</span><span class="info-val">${tmb} kcal</span></div>
+      <div class="info-row"><span class="info-lbl">Meta calórica diária</span><span class="info-val ok">~1.950 kcal (déficit 15%)</span></div>
+    </div>
+
+    <div class="perfil-card">
+      <div class="perfil-title">Progresso do Plano</div>
+      <div class="progress-bar-wrap">
+        <div class="pbar-lbl"><span>Semana atual</span><span>${cW} de 4</span></div>
+        <div class="pbar"><div class="pfill" style="width:${cW*25}%"></div></div>
+      </div>
+      <div style="margin-top:12px" class="progress-bar-wrap">
+        <div class="pbar-lbl"><span>Dia atual</span><span>${(cW-1)*7+cD} de 28</span></div>
+        <div class="pbar"><div class="pfill" style="width:${((cW-1)*7+cD)/28*100}%"></div></div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div class="section-title" style="font-family:'DM Serif Display',serif;color:var(--g4);margin-bottom:12px">Nutrientes chave para GH</div>
+      <div class="nutrientes-grid">
+        <div class="nut-card"><div class="nut-icon">🥚</div><div class="nut-name">Arginina</div><div class="nut-val">Ovos · Amendoim</div><div class="nut-desc">Estimula diretamente a hipófise</div></div>
+        <div class="nut-card"><div class="nut-icon">🐟</div><div class="nut-name">Ômega-3</div><div class="nut-val">Salmão · Atum</div><div class="nut-desc">Reduz inflamação, libera GH</div></div>
+        <div class="nut-card"><div class="nut-icon">🫐</div><div class="nut-name">Antioxidantes</div><div class="nut-val">Mirtilos · Açaí</div><div class="nut-desc">Reduzem somatostatina</div></div>
+        <div class="nut-card"><div class="nut-icon">🌙</div><div class="nut-name">Triptofano</div><div class="nut-val">Banana · Cereja</div><div class="nut-desc">Sono profundo = pico de GH</div></div>
+        <div class="nut-card"><div class="nut-icon">🥗</div><div class="nut-name">Zinco</div><div class="nut-val">Abóbora · Cogumelo</div><div class="nut-desc">Síntese hormonal essencial</div></div>
+        <div class="nut-card"><div class="nut-icon">💛</div><div class="nut-name">Cúrcuma</div><div class="nut-val">Diário nas refeições</div><div class="nut-desc">Anti-inflamatório pró-GH</div></div>
+      </div>
+    </div>`;
+}
+
+// ─── RENDER REGRAS ───────────────────────────────────────────────────────────
+function renderRegras(){
+  const regras=[
+    {t:'Proteína em todas as refeições',d:'Meta: <strong>160g/dia</strong>. Mínimo 25g por refeição principal. Ovos, frango, peixe, leguminosas e whey são as fontes do plano.'},
+    {t:'Jejum 16/8 progressivo',d:'Semana 1: sem jejum · Semana 2: 2 dias · Semana 3: 3 dias · Semana 4: 2 dias (manutenção). <strong>Maior estímulo natural de GH existente.</strong>'},
+    {t:'Zero açúcar e carboidros simples à noite',d:'Após as 18h, <strong>sem arroz branco, pão branco, doces ou sucos industrializados</strong>. O pico de insulina à noite suprime completamente o GH noturno.'},
+    {t:'Ceia estratégica obrigatória',d:'<strong>Banana + cereja + amendoim</strong>: triptofano e melatonina naturais. Favorecem o sono profundo onde 70% do GH diário é liberado.'},
+    {t:'Treino de força 3–4x por semana',d:'O exercício de força em jejum curto (4h sem comer) + refeição proteica 30min após = <strong>pico máximo de GH</strong> em qualquer protocolo natural.'},
+    {t:'Sono de qualidade: 7–8h obrigatório',d:'<strong>Sem sono = sem GH</strong>. O pico máximo ocorre entre 23h e 2h. Desligue telas 1h antes. Use chás da ceia (camomila, valeriana) para induzir sono profundo.'},
+    {t:'Hidratação: 2,5L de água/dia',d:'Especialmente nos dias de jejum. A desidratação eleva cortisol, que é o antagonista direto do GH.'},
+    {t:'O que NUNCA fazer neste plano',d:'❌ Álcool (suprime hipófise) · ❌ Açúcar refinado · ❌ Ultraprocessados · ❌ Refeição pesada antes de dormir · ❌ Pular o sono'},
+  ];
+
+  document.getElementById('page-regras').innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--g3);margin-bottom:4px">Protocolo GH</div>
+      <div style="font-size:.82rem;color:var(--ts)">8 regras fundamentais do plano · Leia antes de começar</div>
+    </div>
+    ${regras.map((r,i)=>`
+    <div class="regra-card">
+      <div class="regra-num">${i+1}</div>
+      <div>
+        <div style="font-size:.85rem;font-weight:600;color:var(--cream);margin-bottom:4px">${r.t}</div>
+        <div class="regra-txt">${r.d}</div>
+      </div>
+    </div>`).join('')}
+    <div style="height:8px"></div>`;
+}
+
+// ─── PAGE SWITCH ─────────────────────────────────────────────────────────────
+function showPage(name, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('mainScroll').scrollTop=0;
+  // show/hide day strip and week tabs
+  const isCardapio=name==='cardapio';
+  document.getElementById('weekTabs').style.display=isCardapio?'flex':'none';
+  document.getElementById('dayStrip').style.display=isCardapio?'flex':'none';
+  if(name==='perfil') renderPerfil();
+}
+</script>
+</body>
+</html>
