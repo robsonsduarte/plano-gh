@@ -116,6 +116,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--g0);color:var(--cream)}
 .install-box{background:linear-gradient(135deg,rgba(45,106,79,.3),rgba(82,183,136,.1));border:1px solid rgba(82,183,136,.25);border-radius:14px;padding:15px;margin-bottom:12px;font-size:.8rem;color:var(--g5);line-height:1.7}
 .install-title{font-family:'DM Serif Display',serif;font-size:1rem;color:var(--g3);margin-bottom:8px}
 
+/* MERCADO */
+.semana-sel{display:flex;gap:6px;margin-bottom:16px}
+.ssel{flex:1;padding:8px 4px;text-align:center;font-size:.72rem;font-weight:500;border-radius:10px;border:1px solid rgba(82,183,136,.18);background:transparent;color:var(--ts);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.ssel.active{background:var(--g2);color:#fff;border-color:var(--g2)}
+.mcat{margin-bottom:18px}
+.mcat-title{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:600;color:var(--g4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(82,183,136,.12)}
+.mcat-icon{font-size:1.1rem}
+.mitem{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(26,46,26,.7);border:1px solid rgba(82,183,136,.1);border-radius:12px;margin-bottom:7px;cursor:pointer;transition:all .2s}
+.mitem.checked{background:rgba(45,106,79,.2);border-color:rgba(82,183,136,.3);opacity:.7}
+.mcheck{width:22px;height:22px;border-radius:6px;border:1.5px solid rgba(82,183,136,.4);background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;font-size:.8rem}
+.mitem.checked .mcheck{background:var(--g3);border-color:var(--g3);color:#fff}
+.mitem-info{flex:1}
+.mitem-name{font-size:.85rem;color:var(--cream);font-weight:500}
+.mitem.checked .mitem-name{text-decoration:line-through;color:var(--ts)}
+.mitem-qty{font-size:.72rem;color:var(--ts);margin-top:2px}
+.mitem-tag{font-size:.6rem;font-weight:600;padding:2px 7px;border-radius:10px;background:rgba(82,183,136,.15);color:var(--g3);border:1px solid rgba(82,183,136,.2)}
+.mercado-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.mercado-title{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--g3)}
+.reset-btn{font-size:.72rem;color:var(--ts);background:transparent;border:1px solid rgba(82,183,136,.2);padding:5px 10px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.progress-compra{background:rgba(26,46,26,.8);border:1px solid rgba(82,183,136,.15);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.pc-row{display:flex;justify-content:space-between;font-size:.78rem;color:var(--ts);margin-bottom:7px}
+.pc-val{color:var(--g3);font-weight:600}
+.pbar2{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.pfill2{height:100%;background:linear-gradient(90deg,var(--g2),var(--g3));border-radius:3px;transition:width .4s ease}
+
 /* REGRAS */
 .regras-section{margin-bottom:16px}
 .regra-card{background:rgba(26,46,26,.7);border:1px solid rgba(82,183,136,.1);border-radius:12px;padding:13px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
@@ -146,6 +171,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g0);color:var(--cream)}
     <div class="page active" id="page-cardapio"></div>
     <div class="page" id="page-perfil"></div>
     <div class="page" id="page-regras"></div>
+    <div class="page" id="page-mercado"></div>
   </div>
 </div>
 
@@ -153,6 +179,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g0);color:var(--cream)}
   <button class="nbtn active" onclick="showPage('cardapio',this)"><span class="nicon">🥗</span>Cardápio</button>
   <button class="nbtn" onclick="showPage('perfil',this)"><span class="nicon">👤</span>Perfil</button>
   <button class="nbtn" onclick="showPage('regras',this)"><span class="nicon">📋</span>Regras GH</button>
+  <button class="nbtn" onclick="showPage('mercado',this)"><span class="nicon">🛒</span>Mercado</button>
 </div>
 
 <script>
@@ -566,6 +593,335 @@ function renderRegras(){
     <div style="height:8px"></div>`;
 }
 
+// ─── RENDER MERCADO ──────────────────────────────────────────────────────────
+const MERCADO = {
+  1: {
+    label: 'Semana 1',
+    cats: [
+      { icon: '🥩', name: 'Proteínas', items: [
+        { n: 'Ovos', q: '21 unidades', gh: true },
+        { n: 'Frango (peito)', q: '800g', gh: true },
+        { n: 'Salmão', q: '400g', gh: true },
+        { n: 'Atum ao natural', q: '3 latas (140g cada)', gh: true },
+        { n: 'Tilápia', q: '350g', gh: true },
+        { n: 'Carne bovina magra (contrafilé ou patinho)', q: '300g', gh: true },
+        { n: 'Whey protein', q: '5 doses (125g)', gh: true },
+        { n: 'Iogurte grego natural', q: '500g (sem açúcar)', gh: true },
+      ]},
+      { icon: '🥦', name: 'Legumes e Verduras', items: [
+        { n: 'Brócolis', q: '400g', gh: true },
+        { n: 'Espinafre', q: '200g', gh: true },
+        { n: 'Couve', q: '1 maço', gh: true },
+        { n: 'Beterraba', q: '4 unidades médias', gh: true },
+        { n: 'Cenoura', q: '3 unidades', gh: false },
+        { n: 'Tomate', q: '6 unidades', gh: false },
+        { n: 'Abóbora', q: '500g', gh: false },
+        { n: 'Alface + rúcula (mix folhas)', q: '2 pacotes', gh: false },
+      ]},
+      { icon: '🍌', name: 'Frutas', items: [
+        { n: 'Banana', q: '7 unidades (1/dia ceia)', gh: true },
+        { n: 'Mirtilos (blueberry)', q: '200g', gh: true },
+        { n: 'Morangos', q: '300g', gh: true },
+        { n: 'Maçã verde', q: '3 unidades', gh: false },
+        { n: 'Cereja (fresca ou congelada)', q: '300g', gh: true },
+        { n: 'Pera', q: '2 unidades', gh: false },
+        { n: 'Laranja', q: '3 unidades', gh: false },
+      ]},
+      { icon: '🌾', name: 'Carboidratos Complexos', items: [
+        { n: 'Aveia em flocos (grossa)', q: '500g', gh: true },
+        { n: 'Arroz integral', q: '1kg', gh: false },
+        { n: 'Quinoa', q: '300g', gh: true },
+        { n: 'Pão integral (sem açúcar)', q: '1 pacote', gh: false },
+        { n: 'Lentilha', q: '400g', gh: true },
+        { n: 'Grão-de-bico', q: '400g (cozido ou seco)', gh: true },
+        { n: 'Feijão preto', q: '500g', gh: false },
+        { n: 'Batata-doce', q: '2 médias', gh: false },
+      ]},
+      { icon: '🥑', name: 'Gorduras Boas', items: [
+        { n: 'Abacate', q: '3 unidades', gh: true },
+        { n: 'Azeite extra virgem', q: '500ml', gh: true },
+        { n: 'Amendoim (natural, sem sal)', q: '300g', gh: true },
+        { n: 'Pasta de amendoim (integral)', q: '1 pote', gh: true },
+        { n: 'Castanhas mistas (sem sal)', q: '200g', gh: true },
+        { n: 'Castanha do Pará', q: '50g (max 4/dia)', gh: true },
+        { n: 'Sementes de abóbora', q: '150g', gh: true },
+        { n: 'Sementes de chia', q: '100g', gh: true },
+      ]},
+      { icon: '🌿', name: 'Temperos e Funcionais', items: [
+        { n: 'Cúrcuma em pó', q: '1 pote (50g)', gh: true },
+        { n: 'Gengibre fresco', q: '1 raiz', gh: true },
+        { n: 'Pimenta-do-reino', q: '1 pote', gh: false },
+        { n: 'Alho', q: '1 cabeça', gh: false },
+        { n: 'Limão', q: '6 unidades', gh: false },
+        { n: 'Canela em pó', q: '1 pote', gh: false },
+        { n: 'Vinagre de maçã', q: '1 garrafa', gh: false },
+      ]},
+      { icon: '🍵', name: 'Bebidas e Suplementos', items: [
+        { n: 'Chá de camomila (sachês)', q: '1 caixa (10 sachês)', gh: true },
+        { n: 'Chá verde (sachês)', q: '1 caixa', gh: true },
+        { n: 'Chá de valeriana', q: '1 caixa', gh: true },
+        { n: 'Chá de erva-cidreira', q: '1 caixa', gh: true },
+        { n: 'Café (pó ou grão)', q: '1 pacote (sem açúcar)', gh: false },
+        { n: 'Leite de amêndoa (sem açúcar)', q: '1 litro', gh: false },
+      ]},
+    ]
+  },
+  2: {
+    label: 'Semana 2',
+    cats: [
+      { icon: '🥩', name: 'Proteínas', items: [
+        { n: 'Ovos', q: '21 unidades', gh: true },
+        { n: 'Frango (peito)', q: '750g', gh: true },
+        { n: 'Salmão', q: '450g', gh: true },
+        { n: 'Atum ao natural', q: '3 latas', gh: true },
+        { n: 'Sardinha em conserva', q: '2 latas', gh: true },
+        { n: 'Tilápia', q: '300g', gh: true },
+        { n: 'Carne moída magra', q: '300g', gh: true },
+        { n: 'Whey protein', q: '6 doses', gh: true },
+        { n: 'Iogurte grego natural', q: '600g', gh: true },
+        { n: 'Queijo cottage', q: '200g', gh: true },
+      ]},
+      { icon: '🥦', name: 'Legumes e Verduras', items: [
+        { n: 'Brócolis', q: '500g', gh: true },
+        { n: 'Espinafre', q: '200g', gh: true },
+        { n: 'Couve', q: '1 maço', gh: true },
+        { n: 'Beterraba', q: '4 unidades', gh: true },
+        { n: 'Pimentão colorido', q: '2 unidades', gh: false },
+        { n: 'Cogumelo Paris ou Shiitake', q: '200g', gh: true },
+        { n: 'Mix folhas verdes', q: '2 pacotes', gh: false },
+        { n: 'Batata-doce', q: '3 médias', gh: false },
+      ]},
+      { icon: '🍌', name: 'Frutas', items: [
+        { n: 'Banana', q: '5 unidades', gh: true },
+        { n: 'Mirtilos', q: '200g', gh: true },
+        { n: 'Morangos', q: '300g', gh: true },
+        { n: 'Framboesas', q: '150g (fresca ou congelada)', gh: true },
+        { n: 'Açaí (polpa, sem açúcar)', q: '400g', gh: true },
+        { n: 'Cereja', q: '250g', gh: true },
+        { n: 'Maçã', q: '2 unidades', gh: false },
+        { n: 'Tangerina', q: '3 unidades', gh: false },
+        { n: 'Laranja', q: '3 unidades', gh: false },
+      ]},
+      { icon: '🌾', name: 'Carboidratos Complexos', items: [
+        { n: 'Aveia em flocos', q: '400g', gh: true },
+        { n: 'Arroz integral', q: '500g', gh: false },
+        { n: 'Quinoa', q: '250g', gh: true },
+        { n: 'Pão integral', q: '1 pacote', gh: false },
+        { n: 'Lentilha', q: '400g', gh: true },
+        { n: 'Grão-de-bico', q: '400g', gh: true },
+        { n: 'Feijão carioca', q: '400g', gh: false },
+        { n: 'Granola sem açúcar', q: '150g', gh: false },
+      ]},
+      { icon: '🥑', name: 'Gorduras Boas', items: [
+        { n: 'Abacate', q: '2 unidades', gh: true },
+        { n: 'Azeite extra virgem', q: '250ml (reposição)', gh: true },
+        { n: 'Amendoim natural', q: '200g', gh: true },
+        { n: 'Castanhas mistas', q: '200g', gh: true },
+        { n: 'Sementes de abóbora', q: '100g', gh: true },
+        { n: 'Sementes de linhaça', q: '100g', gh: true },
+      ]},
+      { icon: '🌿', name: 'Temperos e Funcionais', items: [
+        { n: 'Cúrcuma em pó', q: 'Repor se necessário', gh: true },
+        { n: 'Gengibre fresco', q: '1 raiz pequena', gh: true },
+        { n: 'Alho', q: '1 cabeça', gh: false },
+        { n: 'Limão', q: '5 unidades', gh: false },
+        { n: 'Cacau em pó 100%', q: '100g', gh: true },
+        { n: 'Curry em pó (leve)', q: '1 pote', gh: false },
+      ]},
+    ]
+  },
+  3: {
+    label: 'Semana 3',
+    cats: [
+      { icon: '🥩', name: 'Proteínas', items: [
+        { n: 'Ovos', q: '21 unidades', gh: true },
+        { n: 'Frango (peito)', q: '800g', gh: true },
+        { n: 'Salmão', q: '500g', gh: true },
+        { n: 'Atum ao natural', q: '3 latas', gh: true },
+        { n: 'Carne bovina magra', q: '300g', gh: true },
+        { n: 'Whey protein', q: '7 doses', gh: true },
+        { n: 'Iogurte grego natural', q: '700g', gh: true },
+      ]},
+      { icon: '🥦', name: 'Legumes e Verduras', items: [
+        { n: 'Brócolis', q: '500g', gh: true },
+        { n: 'Espinafre', q: '300g', gh: true },
+        { n: 'Couve', q: '1 maço', gh: true },
+        { n: 'Beterraba', q: '5 unidades', gh: true },
+        { n: 'Cogumelo Shiitake', q: '200g', gh: true },
+        { n: 'Mix folhas verdes', q: '2 pacotes', gh: false },
+        { n: 'Batata-doce', q: '2 médias', gh: false },
+      ]},
+      { icon: '🍌', name: 'Frutas', items: [
+        { n: 'Banana', q: '5 unidades', gh: true },
+        { n: 'Mirtilos', q: '250g', gh: true },
+        { n: 'Morangos', q: '200g', gh: true },
+        { n: 'Framboesas', q: '200g', gh: true },
+        { n: 'Açaí (polpa, sem açúcar)', q: '500g', gh: true },
+        { n: 'Cereja', q: '300g', gh: true },
+        { n: 'Maçã verde', q: '3 unidades', gh: false },
+        { n: 'Laranja', q: '2 unidades', gh: false },
+      ]},
+      { icon: '🌾', name: 'Carboidratos Complexos', items: [
+        { n: 'Aveia em flocos', q: '400g', gh: true },
+        { n: 'Arroz integral', q: '500g', gh: false },
+        { n: 'Quinoa', q: '300g', gh: true },
+        { n: 'Lentilha', q: '500g', gh: true },
+        { n: 'Grão-de-bico', q: '500g', gh: true },
+        { n: 'Feijão preto ou carioca', q: '400g', gh: false },
+        { n: 'Pão integral', q: '1 pacote', gh: false },
+        { n: 'Granola sem açúcar', q: '100g', gh: false },
+      ]},
+      { icon: '🥑', name: 'Gorduras Boas', items: [
+        { n: 'Abacate', q: '3 unidades', gh: true },
+        { n: 'Azeite extra virgem', q: '250ml', gh: true },
+        { n: 'Amendoim natural', q: '200g', gh: true },
+        { n: 'Castanhas mistas', q: '150g', gh: true },
+        { n: 'Sementes de abóbora', q: '150g', gh: true },
+        { n: 'Cacau em pó 100%', q: '50g', gh: true },
+      ]},
+      { icon: '🌿', name: 'Temperos e Funcionais', items: [
+        { n: 'Cúrcuma em pó', q: 'Repor se necessário', gh: true },
+        { n: 'Gengibre fresco', q: '1 raiz', gh: true },
+        { n: 'Alho', q: '1 cabeça', gh: false },
+        { n: 'Limão', q: '6 unidades', gh: false },
+        { n: 'Pimenta-do-reino', q: 'Repor', gh: false },
+        { n: 'Vinagre de maçã', q: 'Repor se necessário', gh: false },
+      ]},
+    ]
+  },
+  4: {
+    label: 'Semana 4',
+    cats: [
+      { icon: '🥩', name: 'Proteínas', items: [
+        { n: 'Ovos', q: '21 unidades', gh: true },
+        { n: 'Frango (peito)', q: '800g', gh: true },
+        { n: 'Salmão', q: '500g', gh: true },
+        { n: 'Atum ao natural', q: '2 latas', gh: true },
+        { n: 'Tilápia', q: '300g', gh: true },
+        { n: 'Carne moída magra', q: '250g', gh: true },
+        { n: 'Picanha magra', q: '300g (encerramento)', gh: true },
+        { n: 'Whey protein', q: '7 doses', gh: true },
+        { n: 'Iogurte grego natural', q: '700g', gh: true },
+        { n: 'Queijo cottage', q: '200g', gh: true },
+      ]},
+      { icon: '🥦', name: 'Legumes e Verduras', items: [
+        { n: 'Brócolis', q: '500g', gh: true },
+        { n: 'Espinafre', q: '250g', gh: true },
+        { n: 'Couve', q: '1 maço', gh: true },
+        { n: 'Beterraba', q: '5 unidades', gh: true },
+        { n: 'Cogumelo (paris ou shiitake)', q: '200g', gh: true },
+        { n: 'Mix folhas verdes', q: '2 pacotes', gh: false },
+        { n: 'Tomate', q: '4 unidades', gh: false },
+        { n: 'Cenoura', q: '2 unidades', gh: false },
+      ]},
+      { icon: '🍌', name: 'Frutas', items: [
+        { n: 'Banana', q: '5 unidades', gh: true },
+        { n: 'Mirtilos', q: '200g', gh: true },
+        { n: 'Morangos', q: '200g', gh: true },
+        { n: 'Framboesas', q: '150g', gh: true },
+        { n: 'Açaí (polpa, sem açúcar)', q: '400g', gh: true },
+        { n: 'Cereja', q: '300g', gh: true },
+        { n: 'Pera', q: '2 unidades', gh: false },
+        { n: 'Laranja', q: '3 unidades', gh: false },
+      ]},
+      { icon: '🌾', name: 'Carboidratos Complexos', items: [
+        { n: 'Aveia em flocos', q: '350g', gh: true },
+        { n: 'Arroz integral', q: '500g', gh: false },
+        { n: 'Quinoa', q: '300g', gh: true },
+        { n: 'Lentilha', q: '500g', gh: true },
+        { n: 'Grão-de-bico', q: '500g', gh: true },
+        { n: 'Feijão', q: '400g', gh: false },
+        { n: 'Pão integral', q: '1 pacote', gh: false },
+      ]},
+      { icon: '🥑', name: 'Gorduras Boas', items: [
+        { n: 'Abacate', q: '3 unidades', gh: true },
+        { n: 'Azeite extra virgem', q: '250ml', gh: true },
+        { n: 'Amendoim natural', q: '200g', gh: true },
+        { n: 'Castanhas mistas', q: '200g', gh: true },
+        { n: 'Sementes de abóbora', q: '150g', gh: true },
+        { n: 'Pasta de amendoim integral', q: 'Repor se necessário', gh: true },
+      ]},
+      { icon: '🌿', name: 'Temperos e Funcionais', items: [
+        { n: 'Cúrcuma em pó', q: 'Repor', gh: true },
+        { n: 'Gengibre fresco', q: '1 raiz', gh: true },
+        { n: 'Alho', q: '1 cabeça', gh: false },
+        { n: 'Limão', q: '6 unidades', gh: false },
+        { n: 'Canela em pó', q: 'Repor', gh: false },
+        { n: 'Chás (camomila, valeriana, erva-cidreira)', q: '1 caixa cada (reposição)', gh: true },
+      ]},
+    ]
+  }
+};
+
+let mSemana = 1;
+let checked = JSON.parse(localStorage.getItem('mChecked')||'{}');
+
+function saveChecked(){ try{localStorage.setItem('mChecked',JSON.stringify(checked))}catch(e){} }
+
+function toggleItem(key){
+  checked[key]=!checked[key];
+  saveChecked();
+  renderMercado();
+}
+
+function resetMercado(){
+  const prefix=`m${mSemana}-`;
+  Object.keys(checked).forEach(k=>{ if(k.startsWith(prefix)) delete checked[k]; });
+  saveChecked();
+  renderMercado();
+}
+
+function setMSemana(s){
+  mSemana=s;
+  document.querySelectorAll('.ssel').forEach((b,i)=>b.classList.toggle('active',i===s-1));
+  renderMercado();
+}
+
+function renderMercado(){
+  const d=MERCADO[mSemana];
+  let total=0, done=0;
+  d.cats.forEach(c=>c.items.forEach(()=>total++));
+
+  let html=`
+    <div class="mercado-header">
+      <span class="mercado-title">🛒 Lista do Mercado</span>
+      <button class="reset-btn" onclick="resetMercado()">Limpar ✕</button>
+    </div>
+    <div class="semana-sel">
+      ${[1,2,3,4].map(i=>`<button class="ssel${i===mSemana?' active':''}" onclick="setMSemana(${i})">Sem. ${i}</button>`).join('')}
+    </div>`;
+
+  d.cats.forEach((cat,ci)=>{
+    html+=`<div class="mcat"><div class="mcat-title"><span class="mcat-icon">${cat.icon}</span>${cat.name}</div>`;
+    cat.items.forEach((item,ii)=>{
+      const key=`m${mSemana}-${ci}-${ii}`;
+      const isChecked=!!checked[key];
+      if(isChecked) done++;
+      html+=`<div class="mitem${isChecked?' checked':''}" onclick="toggleItem('${key}')">
+        <div class="mcheck">${isChecked?'✓':''}</div>
+        <div class="mitem-info">
+          <div class="mitem-name">${item.n}</div>
+          <div class="mitem-qty">${item.q}</div>
+        </div>
+        ${item.gh?'<span class="mitem-tag">↑ GH</span>':''}
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+
+  // inject progress after semana-sel
+  const pct=total?Math.round(done/total*100):0;
+  const progressHtml=`<div class="progress-compra">
+    <div class="pc-row"><span>Itens comprados</span><span class="pc-val">${done} de ${total}</span></div>
+    <div class="pbar2"><div class="pfill2" style="width:${pct}%"></div></div>
+  </div>`;
+
+  document.getElementById('page-mercado').innerHTML=html;
+  // insert progress after semana-sel div
+  const sselDiv=document.getElementById('page-mercado').querySelector('.semana-sel');
+  if(sselDiv) sselDiv.insertAdjacentHTML('afterend', progressHtml);
+}
+
 // ─── PAGE SWITCH ─────────────────────────────────────────────────────────────
 function showPage(name, btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -573,11 +929,11 @@ function showPage(name, btn){
   document.getElementById('page-'+name).classList.add('active');
   btn.classList.add('active');
   document.getElementById('mainScroll').scrollTop=0;
-  // show/hide day strip and week tabs
   const isCardapio=name==='cardapio';
   document.getElementById('weekTabs').style.display=isCardapio?'flex':'none';
   document.getElementById('dayStrip').style.display=isCardapio?'flex':'none';
   if(name==='perfil') renderPerfil();
+  if(name==='mercado') renderMercado();
 }
 </script>
 </body>
