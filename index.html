@@ -116,6 +116,41 @@ body{font-family:'DM Sans',sans-serif;background:var(--g0);color:var(--cream)}
 .install-box{background:linear-gradient(135deg,rgba(45,106,79,.3),rgba(82,183,136,.1));border:1px solid rgba(82,183,136,.25);border-radius:14px;padding:15px;margin-bottom:12px;font-size:.8rem;color:var(--g5);line-height:1.7}
 .install-title{font-family:'DM Serif Display',serif;font-size:1rem;color:var(--g3);margin-bottom:8px}
 
+/* SUBSTITUTOS */
+.sub-search{width:100%;padding:11px 14px;border-radius:12px;border:1px solid rgba(82,183,136,.2);background:rgba(26,46,26,.8);color:var(--cream);font-size:.85rem;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:14px}
+.sub-search::placeholder{color:var(--ts)}
+.sub-search:focus{border-color:rgba(82,183,136,.5)}
+.sub-filter{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:16px;padding-bottom:2px}
+.sub-filter::-webkit-scrollbar{display:none}
+.sfbtn{flex-shrink:0;padding:6px 13px;font-size:.7rem;font-weight:500;border-radius:20px;border:1px solid rgba(82,183,136,.18);background:transparent;color:var(--ts);cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all .2s}
+.sfbtn.active{background:var(--g2);color:#fff;border-color:var(--g2)}
+.sub-card{background:rgba(26,46,26,.75);border:1px solid rgba(82,183,136,.1);border-radius:16px;margin-bottom:12px;overflow:hidden}
+.sub-card-head{padding:14px 16px 12px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.sub-card-head:active{background:rgba(82,183,136,.05)}
+.sub-original{flex:1}
+.sub-orig-label{font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--ts);margin-bottom:3px}
+.sub-orig-name{font-family:'DM Serif Display',serif;font-size:1.05rem;color:var(--cream)}
+.sub-orig-role{font-size:.72rem;color:var(--ts);margin-top:2px}
+.sub-badge-cat{font-size:.6rem;font-weight:600;padding:3px 9px;border-radius:10px}
+.sub-toggle{font-size:.75rem;color:var(--ts);transition:transform .22s;flex-shrink:0}
+.sub-card.open .sub-toggle{transform:rotate(180deg)}
+.sub-alts{display:none;padding:0 16px 14px;border-top:1px solid rgba(82,183,136,.08);padding-top:12px}
+.sub-card.open .sub-alts{display:block}
+.sub-alt{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:rgba(45,106,79,.12);border:1px solid rgba(82,183,136,.15);border-radius:12px;margin-bottom:8px}
+.sub-alt:last-child{margin-bottom:0}
+.sub-alt-num{width:22px;height:22px;border-radius:50%;background:var(--g2);color:#fff;font-size:.68rem;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.sub-alt-body{flex:1}
+.sub-alt-name{font-size:.85rem;font-weight:500;color:var(--cream);margin-bottom:2px}
+.sub-alt-qty{font-size:.72rem;color:var(--ts);margin-bottom:4px}
+.sub-alt-why{font-size:.73rem;color:var(--tm);line-height:1.5}
+.sub-alt-tags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.sub-tag{font-size:.6rem;padding:2px 7px;border-radius:8px;font-weight:500}
+.tag-gh{background:rgba(82,183,136,.15);color:var(--g3);border:1px solid rgba(82,183,136,.2)}
+.tag-facil{background:rgba(212,160,23,.12);color:var(--amber);border:1px solid rgba(212,160,23,.2)}
+.tag-barato{background:rgba(74,103,65,.2);color:var(--g4);border:1px solid rgba(74,103,65,.3)}
+.tag-proteina{background:rgba(199,86,67,.12);color:#EF9A9A;border:1px solid rgba(199,86,67,.2)}
+.sub-empty{text-align:center;padding:40px 20px;color:var(--ts);font-size:.85rem}
+
 /* MERCADO */
 .semana-sel{display:flex;gap:6px;margin-bottom:16px}
 .ssel{flex:1;padding:8px 4px;text-align:center;font-size:.72rem;font-weight:500;border-radius:10px;border:1px solid rgba(82,183,136,.18);background:transparent;color:var(--ts);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
@@ -172,6 +207,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g0);color:var(--cream)}
     <div class="page" id="page-perfil"></div>
     <div class="page" id="page-regras"></div>
     <div class="page" id="page-mercado"></div>
+    <div class="page" id="page-sub"></div>
   </div>
 </div>
 
@@ -180,6 +216,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g0);color:var(--cream)}
   <button class="nbtn" onclick="showPage('perfil',this)"><span class="nicon">👤</span>Perfil</button>
   <button class="nbtn" onclick="showPage('regras',this)"><span class="nicon">📋</span>Regras GH</button>
   <button class="nbtn" onclick="showPage('mercado',this)"><span class="nicon">🛒</span>Mercado</button>
+  <button class="nbtn" onclick="showPage('sub',this)"><span class="nicon">🔄</span>Substitutos</button>
 </div>
 
 <script>
@@ -922,6 +959,215 @@ function renderMercado(){
   if(sselDiv) sselDiv.insertAdjacentHTML('afterend', progressHtml);
 }
 
+// ─── SUBSTITUTOS ─────────────────────────────────────────────────────────────
+const SUBS = [
+  {
+    id:'aveia', cat:'Carboidrato', catColor:'tag-facil',
+    nome:'Aveia (40g)', role:'Carboidrato lento + suporte ao sono',
+    alts:[
+      {nome:'Granola sem açúcar (30g)', qty:'30g', why:'Mesma base de grãos integrais, fibras e betaglucana. Levemente mais calórica — reduza para 25g se quiser equivalência.', tags:['tag-facil','tag-gh']},
+      {nome:'Farinha de arroz integral (35g)', qty:'35g + água ou leite vegetal', why:'Carboidrato complexo de baixo índice glicêmico, fácil digestão. Ideal para quem tem intolerância ao glúten.', tags:['tag-facil','tag-barato']},
+      {nome:'Quinoa em flocos (35g)', qty:'35g', why:'Proteína completa + carboidrato lento. Mais rico em arginina que a aveia — estímulo direto ao GH. Melhor substituto.', tags:['tag-gh','tag-proteina']},
+    ]
+  },
+  {
+    id:'mirtilos', cat:'Antioxidante', catColor:'tag-gh',
+    nome:'Mirtilos (blueberry)', role:'Antioxidante — reduz somatostatina',
+    alts:[
+      {nome:'Açaí (polpa, sem açúcar)', qty:'80–100g', why:'Maior concentração de antocianinas que o mirtilo. Reduz cortisol e inflamação — efeito pro-GH similar. Sem açúcar ou guaraná.', tags:['tag-gh','tag-barato']},
+      {nome:'Amora-preta (fresca ou congelada)', qty:'80g', why:'Rica em resveratrol e antocianinas. Mesmo perfil antioxidante do mirtilo, mais fácil de encontrar no Brasil.', tags:['tag-gh','tag-facil']},
+      {nome:'Morango (fresco)', qty:'100–120g', why:'Vitamina C alta + antioxidantes. Ligeiramente inferior ao mirtilo em antocianinas, mas excelente custo-benefício.', tags:['tag-gh','tag-barato','tag-facil']},
+    ]
+  },
+  {
+    id:'beterraba', cat:'Anti-inflamatório', catColor:'tag-gh',
+    nome:'Beterraba', role:'Nitrato natural — fluxo sanguíneo + anti-inflamatório',
+    alts:[
+      {nome:'Cenoura assada ou crua', qty:'1 média (100g)', why:'Rica em betacaroteno e antioxidantes. Não tem o mesmo teor de nitrato, mas reduz inflamação e é excelente para o sistema endócrino.', tags:['tag-facil','tag-barato']},
+      {nome:'Pimentão vermelho', qty:'1/2 unidade (80g)', why:'Maior fonte de vitamina C dentre os vegetais. Potente anti-inflamatório que inibe a somatostatina — equivalente ao efeito da beterraba.', tags:['tag-gh','tag-facil']},
+      {nome:'Tomate cereja (assado)', qty:'100g', why:'Licopeno potencializado pelo calor. Anti-inflamatório e antioxidante. Combine com azeite para absorção máxima.', tags:['tag-facil','tag-barato']},
+    ]
+  },
+  {
+    id:'lentilha', cat:'Proteína vegetal', catColor:'tag-proteina',
+    nome:'Lentilha', role:'Proteína vegetal + arginina + ferro',
+    alts:[
+      {nome:'Grão-de-bico cozido', qty:'4–5 col de sopa', why:'Perfil de aminoácidos muito similar, com arginina equivalente. Mais versátil no preparo — pode assar crocante ou fazer pasta (homus).', tags:['tag-gh','tag-facil']},
+      {nome:'Feijão preto ou carioca', qty:'4 col de sopa', why:'Clássico brasileiro com proteína completa quando combinado com arroz. Mesmo aporte de arginina e lisina. Mais barato e acessível.', tags:['tag-barato','tag-facil']},
+      {nome:'Edamame (soja verde)', qty:'100g cozido', why:'Proteína mais alta que a lentilha (11g/100g vs 9g). Rica em arginina e isoflavonas — boa para controle hormonal masculino em quantidades moderadas.', tags:['tag-gh','tag-proteina']},
+    ]
+  },
+  {
+    id:'salmao', cat:'Proteína', catColor:'tag-proteina',
+    nome:'Salmão', role:'Ômega-3 + proteína completa anti-inflamatória',
+    alts:[
+      {nome:'Sardinha em conserva (água)', qty:'1 lata (120–140g)', why:'Ômega-3 igual ou superior ao salmão por grama. Mais barata, sem mercúrio, proteína alta. Melhor custo-benefício do plano.', tags:['tag-gh','tag-barato']},
+      {nome:'Atum ao natural', qty:'1 lata (140g)', why:'Proteína idêntica, ômega-3 um pouco menor. Excelente para dias práticos — pronto para consumo, sem preparo.', tags:['tag-facil','tag-proteina']},
+      {nome:'Tilápia grelhada', qty:'180g', why:'Peixe branco magro, proteína alta, baixo custo. Ômega-3 menor que o salmão — compensar com 1 col de sopa de linhaça no mesmo prato.', tags:['tag-barato','tag-facil']},
+    ]
+  },
+  {
+    id:'frango', cat:'Proteína', catColor:'tag-proteina',
+    nome:'Frango (peito)', role:'Proteína magra + triptofano',
+    alts:[
+      {nome:'Peru (peito ou presunto de peru sem sal)', qty:'160g ou 4 fatias', why:'Proteína idêntica, levemente mais rico em triptofano que o frango — melhor para ceia ou jantar por favorecer o sono e o GH noturno.', tags:['tag-gh','tag-facil']},
+      {nome:'Ovo inteiro (3 unidades)', qty:'3 ovos', why:'Proteína completa com todos os aminoácidos. Arginina + lisina naturalmente elevadas. Cozido, mexido ou omelete — versátil.', tags:['tag-gh','tag-barato','tag-facil']},
+      {nome:'Atum ao natural (1 lata)', qty:'1 lata (140g)', why:'Proteína similar ao frango, com bônus do ômega-3. Ideal para substituições rápidas sem cozimento.', tags:['tag-facil','tag-proteina']},
+    ]
+  },
+  {
+    id:'ovos', cat:'Proteína', catColor:'tag-proteina',
+    nome:'Ovos (café da manhã)', role:'Arginina + proteína completa + gordura boa',
+    alts:[
+      {nome:'Queijo cottage (150g)', qty:'150g', why:'Caseína de liberação lenta + triptofano alto. Ideal no café da manhã para manter aminoácidos elevados por horas.', tags:['tag-gh','tag-facil']},
+      {nome:'Iogurte grego natural (200g) + nuts', qty:'200g iogurte + 20g castanhas', why:'Proteína completa com probióticos. As castanhas completam os aminoácidos. Sem preparo — ideal para dias sem tempo.', tags:['tag-facil','tag-gh']},
+      {nome:'Whey protein (1 dose) + pasta de amendoim', qty:'25g whey + 1 col sopa', why:'Proteína de máxima biodisponibilidade + arginina do amendoim. Substituto mais poderoso para estimular GH.', tags:['tag-gh','tag-proteina']},
+    ]
+  },
+  {
+    id:'graodebico', cat:'Proteína vegetal', catColor:'tag-proteina',
+    nome:'Grão-de-bico', role:'Proteína vegetal + arginina + fibra',
+    alts:[
+      {nome:'Lentilha cozida', qty:'4–5 col de sopa', why:'Menor tempo de preparo, proteína equivalente. Mais rica em ferro e folato. Excelente substituto direto.', tags:['tag-gh','tag-facil']},
+      {nome:'Feijão branco', qty:'4 col de sopa', why:'Rico em arginina e lisina, cozinha rápido. Combinado com arroz integral forma proteína completa.', tags:['tag-barato','tag-facil']},
+      {nome:'Tofu firme (grelhado)', qty:'150g', why:'Proteína de soja completa — todos os aminoácidos essenciais. Neutro no sabor, absorve temperos. Bom para jantar.', tags:['tag-gh','tag-proteina']},
+    ]
+  },
+  {
+    id:'avocado', cat:'Gordura boa', catColor:'tag-gh',
+    nome:'Abacate', role:'Gordura monoinsaturada + suporte hormonal',
+    alts:[
+      {nome:'Pasta de amendoim integral (2 col chá)', qty:'2 col de chá (30g)', why:'Mesma gordura monoinsaturada + arginina extra. Mais calórico por grama — use menos que o abacate.', tags:['tag-gh','tag-facil']},
+      {nome:'Azeite extra virgem (adicional)', qty:'1 col de sopa a mais', why:'Ácido oleico idêntico ao abacate. Antiinflamatório potente. Regue sobre salada ou prato pronto.', tags:['tag-gh','tag-facil','tag-barato']},
+      {nome:'Castanhas mistas (30g)', qty:'30g', why:'Gordura boa + zinco + selênio. Zinco é cofator direto da síntese de GH. Castanha do Pará tem selênio extra — 3 unidades/dia bastam.', tags:['tag-gh','tag-facil']},
+    ]
+  },
+  {
+    id:'quinoa', cat:'Carboidrato', catColor:'tag-facil',
+    nome:'Quinoa', role:'Proteína completa + carboidrato lento + arginina',
+    alts:[
+      {nome:'Arroz integral + feijão (combo)', qty:'3 col arroz + 3 col feijão', why:'O clássico brasileiro forma proteína completa — aminoácidos complementares. Mais barato e igualmente eficaz para o GH.', tags:['tag-barato','tag-gh','tag-facil']},
+      {nome:'Macarrão integral (al dente)', qty:'60g cru (≈ 130g cozido)', why:'Carboidrato lento, índice glicêmico menor que o arroz branco. Combine com proteína e azeite para refeição completa.', tags:['tag-facil','tag-barato']},
+      {nome:'Batata-doce cozida ou assada', qty:'1 média (130g)', why:'Índice glicêmico baixo-médio, rica em betacaroteno. Excelente para reposição pós-treino sem pico de insulina.', tags:['tag-facil','tag-barato']},
+    ]
+  },
+  {
+    id:'cereja', cat:'Sono/GH noturno', catColor:'tag-gh',
+    nome:'Cereja (ceia)', role:'Melatonina natural — pico de GH noturno',
+    alts:[
+      {nome:'Kiwi (2 unidades)', qty:'2 kiwis médios', why:'Uma das frutas com maior concentração natural de melatonina. Estudos mostram melhora do sono em 35% — equivalente ao efeito da cereja.', tags:['tag-gh','tag-facil']},
+      {nome:'Banana + 1 col pasta de amendoim', qty:'1 banana pequena + 1 col chá', why:'Triptofano + magnésio da banana convertem em melatonina. A gordura do amendoim retarda digestão e sustenta o sono profundo.', tags:['tag-gh','tag-barato','tag-facil']},
+      {nome:'Abacaxi (fatia pequena) + chá de camomila', qty:'80g abacaxi + 1 xícara chá', why:'Abacaxi tem bromelina + triptofano. A camomila tem apigenina que se liga aos receptores de GABA — efeito calmante e pro-sono.', tags:['tag-gh','tag-facil']},
+    ]
+  },
+  {
+    id:'curcuma', cat:'Anti-inflamatório', catColor:'tag-gh',
+    nome:'Cúrcuma', role:'Anti-inflamatório — inibe somatostatina',
+    alts:[
+      {nome:'Gengibre fresco ralado', qty:'1 col chá rasa (5g)', why:'Gingerol tem efeito anti-inflamatório equivalente. Combina bem com proteínas no preparo e tem ação digestiva bônus.', tags:['tag-gh','tag-facil','tag-barato']},
+      {nome:'Canela em pó (canela-do-ceilão)', qty:'1/2 col chá', why:'Reduz resistência à insulina — diminui picos glicêmicos que suprimem o GH. Use no café, aveia ou vitaminas.', tags:['tag-gh','tag-facil','tag-barato']},
+      {nome:'Pimenta-do-reino + azeite (combinados)', qty:'pitada + fio de azeite', why:'A piperina da pimenta tem efeito anti-inflamatório e aumenta absorção de outros nutrientes em até 20%. Sempre combine com azeite.', tags:['tag-gh','tag-facil']},
+    ]
+  },
+  {
+    id:'batata-doce', cat:'Carboidrato', catColor:'tag-facil',
+    nome:'Batata-doce', role:'Reposição de glicogênio pós-treino sem pico de insulina',
+    alts:[
+      {nome:'Inhame cozido', qty:'130g', why:'Índice glicêmico menor que a batata-doce. Rico em vitamina B6 que regula hormônios. Excelente para quem quer menor resposta glicêmica.', tags:['tag-gh','tag-barato']},
+      {nome:'Mandioca cozida (macaxeira)', qty:'100g', why:'Carboidrato de liberação média, mais acessível no Nordeste. Levemente mais calórica — use porção menor.', tags:['tag-barato','tag-facil']},
+      {nome:'Quinoa (4 col de sopa cozida)', qty:'100g cozida', why:'Proteína completa + carboidrato lento. Recuperação pós-treino com estímulo hormonal extra via arginina.', tags:['tag-gh','tag-proteina']},
+    ]
+  },
+  {
+    id:'iogurte', cat:'Proteína', catColor:'tag-proteina',
+    nome:'Iogurte grego natural', role:'Proteína + triptofano + probióticos',
+    alts:[
+      {nome:'Coalhada seca', qty:'100–130g', why:'Versão mais concentrada do iogurte, proteína ainda mais alta. Comum no Nordeste — excelente substituto direto sem perda nutricional.', tags:['tag-gh','tag-barato','tag-facil']},
+      {nome:'Kefir natural (sem açúcar)', qty:'150ml', why:'Probióticos mais diversificados que o iogurte grego. Melhora absorção intestinal de aminoácidos — potencializa indiretamente o GH.', tags:['tag-gh','tag-facil']},
+      {nome:'Queijo cottage (100g) + fruta', qty:'100g cottage + fruta escolhida', why:'Caseína lenta + triptofano alto. Mais sólido — bom para quem não gosta de laticínio líquido no lanche.', tags:['tag-gh','tag-facil']},
+    ]
+  },
+  {
+    id:'amendoim', cat:'Gordura boa', catColor:'tag-gh',
+    nome:'Amendoim / Pasta de amendoim', role:'Arginina + gordura boa + triptofano',
+    alts:[
+      {nome:'Pasta de castanha de caju (sem sal)', qty:'1,5 col chá (25g)', why:'Perfil de gordura similar, rica em zinco e magnésio — cofatores diretos da síntese de GH. Sabor mais suave.', tags:['tag-gh','tag-facil']},
+      {nome:'Castanhas mistas (nozes, amêndoas, castanha de caju)', qty:'25–30g', why:'Arginina concentrada + selênio + vitamina E. As nozes são a mais ricas em ômega-3 dentre as oleaginosas.', tags:['tag-gh','tag-facil']},
+      {nome:'Tahine (pasta de gergelim)', qty:'1 col sopa (20g)', why:'Alto teor de arginina e cálcio. Combina bem com frutas ou sobre tostadas. Menos calórico que o amendoim.', tags:['tag-gh','tag-facil']},
+    ]
+  },
+  {
+    id:'acai', cat:'Antioxidante', catColor:'tag-gh',
+    nome:'Açaí (polpa, sem açúcar)', role:'Antioxidante potente — reduz cortisol',
+    alts:[
+      {nome:'Amora-preta (fresca ou congelada)', qty:'100g', why:'Mesmo perfil de antocianinas do açaí. Reduz estresse oxidativo e cortisol — protetor direto do GH.', tags:['tag-gh','tag-facil']},
+      {nome:'Uva roxa (sem semente)', qty:'100g', why:'Resveratrol + antocianinas. Efeito anti-inflamatório relevante. Não amasse nem vire suco — a casca inteira é o que importa.', tags:['tag-gh','tag-facil','tag-barato']},
+      {nome:'Romã (sementes)', qty:'50–60g', why:'Uma das frutas mais antioxidantes conhecidas. Inibe enzimas que degradam hormônios. Use as sementes no iogurte ou na salada.', tags:['tag-gh']},
+    ]
+  },
+];
+
+let subFilter = 'todos';
+let subOpen = null;
+let subSearch = '';
+
+function renderSub(){
+  const cats = ['todos', ...new Set(SUBS.map(s=>s.cat))];
+  let filtered = SUBS.filter(s=>{
+    const matchCat = subFilter==='todos' || s.cat===subFilter;
+    const q = subSearch.toLowerCase();
+    const matchSearch = !q || s.nome.toLowerCase().includes(q) || s.role.toLowerCase().includes(q) || s.alts.some(a=>a.nome.toLowerCase().includes(q));
+    return matchCat && matchSearch;
+  });
+
+  let html = `
+    <div style="margin-bottom:16px">
+      <div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--g3);margin-bottom:4px">🔄 Substitutos</div>
+      <div style="font-size:.78rem;color:var(--ts)">3 alternativas por alimento · mesma função hormonal</div>
+    </div>
+    <input class="sub-search" type="text" placeholder="Buscar alimento... (ex: aveia, salmão)" value="${subSearch}" oninput="subSearch=this.value;renderSub()" id="subSearchInput">
+    <div class="sub-filter">
+      ${cats.map(c=>`<button class="sfbtn${subFilter===c?' active':''}" onclick="subFilter='${c}';renderSub()">${c==='todos'?'Todos':c}</button>`).join('')}
+    </div>`;
+
+  if(!filtered.length){
+    html+=`<div class="sub-empty">Nenhum alimento encontrado.<br>Tente outro termo de busca.</div>`;
+  } else {
+    filtered.forEach(s=>{
+      const isOpen = subOpen===s.id;
+      html+=`<div class="sub-card${isOpen?' open':''}" id="sc-${s.id}">
+        <div class="sub-card-head" onclick="subOpen=subOpen==='${s.id}'?null:'${s.id}';renderSub()">
+          <div class="sub-original">
+            <div class="sub-orig-label">Alimento original</div>
+            <div class="sub-orig-name">${s.nome}</div>
+            <div class="sub-orig-role">${s.role}</div>
+          </div>
+          <span class="sub-badge-cat ${s.catColor}" style="font-size:.6rem;font-weight:600;padding:3px 9px;border-radius:10px">${s.cat}</span>
+          <span class="sub-toggle">▾</span>
+        </div>
+        ${isOpen?`<div class="sub-alts">
+          <div style="font-size:.7rem;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">3 substitutos equivalentes</div>
+          ${s.alts.map((a,i)=>`<div class="sub-alt">
+            <div class="sub-alt-num">${i+1}</div>
+            <div class="sub-alt-body">
+              <div class="sub-alt-name">${a.nome}</div>
+              <div class="sub-alt-qty">Quantidade: ${a.qty}</div>
+              <div class="sub-alt-why">${a.why}</div>
+              <div class="sub-alt-tags">${a.tags.map(t=>`<span class="sub-tag ${t}">${t==='tag-gh'?'↑ GH':t==='tag-facil'?'Fácil achar':t==='tag-barato'?'Econômico':'Proteína'}</span>`).join('')}</div>
+            </div>
+          </div>`).join('')}
+        </div>`:''}
+      </div>`;
+    });
+  }
+
+  document.getElementById('page-sub').innerHTML=html;
+  if(subSearch){
+    const inp=document.getElementById('subSearchInput');
+    if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}
+  }
+}
+
 // ─── PAGE SWITCH ─────────────────────────────────────────────────────────────
 function showPage(name, btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -934,6 +1180,7 @@ function showPage(name, btn){
   document.getElementById('dayStrip').style.display=isCardapio?'flex':'none';
   if(name==='perfil') renderPerfil();
   if(name==='mercado') renderMercado();
+  if(name==='sub'){ subOpen=null; renderSub(); }
 }
 </script>
 </body>
