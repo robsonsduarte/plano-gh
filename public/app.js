@@ -919,9 +919,33 @@ async function confirmMeal(mealIndex) {
   const days = state.mealPlan?.days || [];
   const dayData = days[state.currentDay - 1];
   const meal = dayData?.meals?.[mealIndex];
+  const totalMeals = dayData?.meals?.length || 6;
 
+  // 1. Immediately mark this meal as confirmed with a success flash
+  const confirmedCard = document.querySelector(`.meal-card[data-meal="${mealIndex}"]`);
+  if (confirmedCard) {
+    confirmedCard.classList.add('meal-confirming');
+    const body = confirmedCard.querySelector('.meal-edit-body');
+    if (body) body.innerHTML = `<div class="meal-confirmed-flash"><span style="font-size:1.5rem">✓</span> Refeicao registrada!</div>`;
+  }
+
+  // 2. Show skeleton on ALL unlogged cards (except the one just confirmed)
+  for (let i = 0; i < totalMeals; i++) {
+    if (i === mealIndex || state.loggedIndexes.includes(i)) continue;
+    const card = document.querySelector(`.meal-card[data-meal="${i}"]`);
+    if (card) {
+      card.classList.add('meal-adjusting');
+      const preview = card.querySelector('.meal-preview');
+      const mealBody = card.querySelector('.meal-body');
+      if (preview) preview.innerHTML = '<div class="skeleton skeleton-text"></div>';
+      if (mealBody) mealBody.innerHTML = '<div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div>';
+      if (mealBody) mealBody.style.display = 'block';
+    }
+  }
+
+  // 3. Call API
   const today = new Date().toISOString().split('T')[0];
-  const body = {
+  const reqBody = {
     date: today,
     weekNum: state.currentWeek,
     dayNum: state.currentDay,
@@ -931,7 +955,11 @@ async function confirmMeal(mealIndex) {
     loggedItems: state.editingItems
   };
 
-  const res = await api('POST', '/meals/log', body);
+  const res = await api('POST', '/meals/log', reqBody);
+
+  // 4. Wait a beat so user sees the animation
+  await new Promise(r => setTimeout(r, 1200));
+
   if (res && !res.error) {
     state.mealLogs[mealIndex] = { loggedItems: [...state.editingItems], macros: res.logged?.macros };
     state.loggedIndexes = res.loggedIndexes || [];

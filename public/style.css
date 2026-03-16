@@ -378,6 +378,28 @@ textarea { resize: vertical; min-height: 60px; }
 .macro-consumed { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0 4px; font-size: .75rem; text-align: center; color: var(--text-muted); }
 .meal-edit-body { padding-top: 12px !important; }
 
+/* Confirm flash */
+.meal-confirming { border-color: var(--accent) !important; transition: border-color .3s; }
+.meal-confirmed-flash {
+  display: flex; align-items: center; gap: 8px; justify-content: center;
+  padding: 20px 16px; color: var(--accent); font-weight: 600; font-size: .95rem;
+  animation: flashIn .4s ease;
+}
+@keyframes flashIn { from { opacity:0; transform:scale(.9) } to { opacity:1; transform:scale(1) } }
+
+/* Skeleton loading for adjusting cards */
+.meal-adjusting { opacity: 1; transition: opacity .3s; }
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-card-alt) 50%, var(--bg-hover) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+.skeleton-text { height: 14px; width: 70%; margin: 8px 16px; }
+.skeleton-line { height: 12px; width: 90%; margin: 10px 0; }
+.skeleton-line.short { width: 55%; }
+@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+
 /* === PERFIL PAGE === */
 .info-grid { display: grid; gap: 1px; background: var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; box-shadow: var(--card-shadow); }
 .info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-card); }
