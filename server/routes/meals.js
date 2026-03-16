@@ -4,6 +4,7 @@ import { query } from '../db.js';
 import { generateWeekPlan } from '../services/meal-generator.js';
 import { FOODS, DIET_RULES } from '../data/foods.js';
 import { resolveMacros, getConsumedMacros, getLoggedMealIndexes, calcRemainingTargets } from '../services/meal-adjuster.js';
+import { estimateFromText, estimateFromImage } from '../services/food-ai.js';
 
 const router = Router();
 router.use(authenticate);
@@ -131,6 +132,36 @@ router.get('/foods/search', async (req, res) => {
   }));
 
   res.json(results);
+});
+
+// POST /api/meals/foods/ai-text — Estimate macros from text description
+router.post('/foods/ai-text', async (req, res) => {
+  try {
+    const { description } = req.body;
+    if (!description || description.length < 2) {
+      return res.status(400).json({ error: 'Descricao do alimento e obrigatoria' });
+    }
+    const result = await estimateFromText(description);
+    res.json(result);
+  } catch (err) {
+    process.stderr.write(`AI text endpoint error: ${err.message}\n`);
+    res.status(500).json({ error: 'Erro ao estimar macros' });
+  }
+});
+
+// POST /api/meals/foods/ai-image — Estimate macros from photo
+router.post('/foods/ai-image', async (req, res) => {
+  try {
+    const { image, mimeType } = req.body;
+    if (!image) {
+      return res.status(400).json({ error: 'Imagem e obrigatoria (base64)' });
+    }
+    const result = await estimateFromImage(image, mimeType || 'image/jpeg');
+    res.json(result);
+  } catch (err) {
+    process.stderr.write(`AI image endpoint error: ${err.message}\n`);
+    res.status(500).json({ error: 'Erro ao analisar imagem' });
+  }
 });
 
 export default router;

@@ -378,6 +378,11 @@ textarea { resize: vertical; min-height: 60px; }
 .macro-consumed { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0 4px; font-size: .75rem; text-align: center; color: var(--text-muted); }
 .meal-edit-body { padding-top: 12px !important; }
 
+/* AI food estimation */
+.ai-option { display: flex; align-items: center; gap: 8px; }
+.ai-result { border-left: 3px solid var(--accent); }
+.ai-loading { padding: 12px; }
+
 /* Confirm flash */
 .meal-confirming { border-color: var(--accent) !important; transition: border-color .3s; }
 .meal-confirmed-flash {

@@ -877,9 +877,113 @@ async function searchFoodForMeal(q) {
 function renderSearchResults() {
   const container = document.getElementById('meal-search-results');
   if (!container) return;
-  container.innerHTML = state.searchResults.map((f, i) =>
-    `<div class="meal-search-item" onclick="addSearchedFood(${i})">${esc(f.name)} <span style="color:var(--text-muted);font-size:.75rem">(${f.serving} · ${f.kcal}kcal)</span></div>`
-  ).join('') || '<div class="meal-search-item" style="color:var(--text-muted)">Nenhum resultado</div>';
+  const input = document.getElementById('meal-search-input');
+  const query = input?.value?.trim() || '';
+
+  if (state.searchResults.length > 0) {
+    container.innerHTML = state.searchResults.map((f, i) =>
+      `<div class="meal-search-item" onclick="addSearchedFood(${i})">${esc(f.name)} <span style="color:var(--text-muted);font-size:.75rem">(${f.serving} · ${f.kcal}kcal)</span></div>`
+    ).join('');
+  } else if (query.length >= 2) {
+    container.innerHTML = `
+      <div class="ai-suggest">
+        <div style="color:var(--text-muted);font-size:.82rem;padding:8px 12px">Nao encontrado no banco de dados</div>
+        <div class="meal-search-item ai-option" onclick="aiEstimateText('${esc(query)}')">
+          <span style="font-size:1.1rem">🤖</span> Calcular macros com IA: "<strong>${esc(query)}</strong>"
+        </div>
+        <div class="meal-search-item ai-option" onclick="aiEstimatePhoto()">
+          <span style="font-size:1.1rem">📸</span> Enviar foto do alimento
+        </div>
+      </div>`;
+  }
+}
+
+// --- AI FOOD ESTIMATION ---
+async function aiEstimateText(description) {
+  const container = document.getElementById('meal-search-results');
+  if (container) container.innerHTML = '<div class="ai-loading"><div class="skeleton skeleton-text"></div><div style="text-align:center;padding:8px;color:var(--text-muted);font-size:.82rem">Consultando IA...</div></div>';
+
+  const res = await api('POST', '/meals/foods/ai-text', { description });
+  if (res?.items?.length) {
+    showAIResults(res.items);
+  } else {
+    if (container) container.innerHTML = `<div style="padding:12px;color:var(--coral);font-size:.85rem">${res?.error || 'Erro ao consultar IA'}</div>`;
+  }
+}
+
+async function aiEstimatePhoto() {
+  // Create a hidden file input and trigger it
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment'; // open camera on mobile
+  input.onchange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const container = document.getElementById('meal-search-results');
+    if (container) container.innerHTML = '<div class="ai-loading"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-line short"></div><div style="text-align:center;padding:8px;color:var(--text-muted);font-size:.82rem">Analisando foto...</div></div>';
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result.split(',')[1];
+      const mimeType = file.type || 'image/jpeg';
+
+      const res = await api('POST', '/meals/foods/ai-image', { image: base64, mimeType });
+      if (res?.items?.length) {
+        showAIResults(res.items);
+      } else {
+        if (container) container.innerHTML = `<div style="padding:12px;color:var(--coral);font-size:.85rem">${res?.error || 'Erro ao analisar foto'}</div>`;
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function showAIResults(items) {
+  const container = document.getElementById('meal-search-results');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div style="padding:8px 12px;font-size:.75rem;color:var(--accent);font-weight:600">ESTIMATIVA DA IA</div>
+    ${items.map((item, i) => `
+      <div class="meal-search-item ai-result" onclick="addAIFood(${i})">
+        <div><strong>${esc(item.name)}</strong> <span style="color:var(--text-muted);font-size:.75rem">(${esc(item.serving)})</span></div>
+        <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px">
+          ${item.kcal}kcal · ${item.prot}g prot · ${item.carb}g carb · ${item.fat}g gord
+          ${item.confidence === 'low' ? ' · <span style="color:var(--coral)">baixa confianca</span>' : ''}
+          ${item.confidence === 'medium' ? ' · <span style="color:var(--amber)">confianca media</span>' : ''}
+        </div>
+        ${item.notes ? `<div style="font-size:.72rem;color:var(--text-muted);font-style:italic;margin-top:2px">${esc(item.notes)}</div>` : ''}
+        <div style="font-size:.72rem;color:var(--accent);margin-top:4px">Toque para adicionar</div>
+      </div>
+    `).join('')}`;
+
+  // Store AI results temporarily
+  state._aiResults = items;
+}
+
+function addAIFood(idx) {
+  const item = state._aiResults?.[idx];
+  if (!item) return;
+  state.editingItems.push({
+    foodId: `ai_${Date.now()}`,
+    name: item.name,
+    serving: item.serving,
+    prep: '',
+    kcal: item.kcal || 0,
+    prot: item.prot || 0,
+    carb: item.carb || 0,
+    fat: item.fat || 0
+  });
+  state._aiResults = [];
+  const input = document.getElementById('meal-search-input');
+  if (input) input.value = '';
+  const results = document.getElementById('meal-search-results');
+  if (results) results.innerHTML = '';
+  renderEditItems();
 }
 
 function addSearchedFood(searchIdx) {
