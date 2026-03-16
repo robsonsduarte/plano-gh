@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Plate -->
+  <circle cx="256" cy="256" r="240" fill="#1a1d24" stroke="#2D6A4F" stroke-width="12"/>
+  <circle cx="256" cy="256" r="200" fill="#22262e" stroke="#2D6A4F" stroke-width="4"/>
+  <!-- Dividing lines (healthy plate sections) -->
+  <line x1="256" y1="80" x2="256" y2="432" stroke="#2D6A4F" stroke-width="3" opacity=".4"/>
+  <line x1="256" y1="256" x2="432" y2="256" stroke="#2D6A4F" stroke-width="3" opacity=".4"/>
+  <!-- Vegetables (left half - green) -->
+  <path d="M120 180 Q140 140 170 160 Q190 130 210 165 Q230 140 240 170 L240 340 Q220 360 180 350 Q140 340 120 300Z" fill="#52B788" opacity=".85"/>
+  <!-- Broccoli tops -->
+  <circle cx="155" cy="190" r="22" fill="#6FCF97"/>
+  <circle cx="190" cy="175" r="18" fill="#52B788"/>
+  <circle cx="175" cy="210" r="16" fill="#40916C"/>
+  <!-- Protein (top right - coral/brown) -->
+  <ellipse cx="340" cy="180" rx="70" ry="45" fill="#E06B5E" opacity=".8" transform="rotate(-10 340 180)"/>
+  <ellipse cx="340" cy="180" rx="55" ry="32" fill="#C75643" opacity=".6" transform="rotate(-10 340 180)"/>
+  <!-- Grill marks -->
+  <line x1="300" y1="170" x2="380" y2="165" stroke="#1a1d24" stroke-width="3" opacity=".3"/>
+  <line x1="305" y1="185" x2="375" y2="180" stroke="#1a1d24" stroke-width="3" opacity=".3"/>
+  <!-- Carbs (bottom right - amber/grain) -->
+  <ellipse cx="340" cy="330" rx="60" ry="40" fill="#E2B93B" opacity=".7"/>
+  <ellipse cx="330" cy="320" rx="15" ry="10" fill="#D4A017" opacity=".5"/>
+  <ellipse cx="355" cy="335" rx="12" ry="8" fill="#D4A017" opacity=".5"/>
+  <!-- Leaf accent on top -->
+  <path d="M248 68 Q256 40 264 68 Q272 52 268 72 Q260 65 256 75 Q252 65 244 72 Q240 52 248 68Z" fill="#52B788"/>
+</svg>
