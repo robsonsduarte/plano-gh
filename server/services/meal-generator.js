@@ -100,10 +100,10 @@ function getAvailable(cat, dietCode, restrictions, slotKey) {
  */
 function buildMeal(slot, slotKey, dietCode, rng, favorites, restrictions, usedToday) {
   const items = [];
+  const itemDetails = [];
   let hasGH = false;
 
   for (const catSpec of slot.structure) {
-    // Handle "fruit|fat" alternative categories
     const cats = catSpec.split('|');
     const chosenCat = cats[Math.floor(rng() * cats.length)];
 
@@ -114,6 +114,10 @@ function buildMeal(slot, slotKey, dietCode, rng, favorites, restrictions, usedTo
       usedToday.add(food.id);
       const prep = food.preps[Math.floor(rng() * food.preps.length)];
       items.push(`${food.name} (${food.serving}) — ${prep}`);
+      itemDetails.push({
+        foodId: food.id, name: food.name, serving: food.serving, prep,
+        kcal: food.kcal, prot: food.prot, carb: food.carb, fat: food.fat
+      });
       if (food.tags.includes('gh')) {
         hasGH = true;
       }
@@ -124,14 +128,24 @@ function buildMeal(slot, slotKey, dietCode, rng, favorites, restrictions, usedTo
     items.push(slot.drink);
   }
 
+  const mealKcal = itemDetails.reduce((s, d) => s + d.kcal, 0);
+  const mealProt = itemDetails.reduce((s, d) => s + d.prot, 0);
+  const mealCarb = itemDetails.reduce((s, d) => s + d.carb, 0);
+  const mealFat = itemDetails.reduce((s, d) => s + d.fat, 0);
+
   return {
     type: slotKey,
     time: MEAL_TIMES[slotKey] || '12:00',
     name: MEAL_NAMES[slotKey] || slotKey,
     items: items.join(' · '),
+    itemDetails,
+    mealMacros: { kcal: mealKcal, prot: mealProt, carb: mealCarb, fat: mealFat },
     gh: hasGH
   };
 }
+
+// Export helpers for meal-adjuster
+export { buildMeal, seededRandom, getAvailable, pickFood };
 
 /**
  * Calculate approximate macros for a day based on target and meal count.

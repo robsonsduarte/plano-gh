@@ -49,8 +49,27 @@ CREATE TABLE IF NOT EXISTS market_checks (
   UNIQUE(user_id, week_num, item_key)
 );
 
+CREATE TABLE IF NOT EXISTS meal_logs (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  week_num INTEGER NOT NULL,
+  day_num INTEGER NOT NULL,
+  meal_index INTEGER NOT NULL,
+  meal_type VARCHAR(30) NOT NULL,
+  original_items TEXT NOT NULL,
+  logged_items JSONB NOT NULL,
+  total_kcal INTEGER NOT NULL DEFAULT 0,
+  total_prot NUMERIC(6,1) NOT NULL DEFAULT 0,
+  total_carb NUMERIC(6,1) NOT NULL DEFAULT 0,
+  total_fat NUMERIC(6,1) NOT NULL DEFAULT 0,
+  logged_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(user_id, date, meal_index)
+);
+
 CREATE INDEX IF NOT EXISTS idx_tracking_user ON tracking(user_id, date);
 CREATE INDEX IF NOT EXISTS idx_market_user ON market_checks(user_id, week_num);
+CREATE INDEX IF NOT EXISTS idx_meal_logs_user_date ON meal_logs(user_id, date);
 `;
 
 async function init() {

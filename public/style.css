@@ -360,6 +360,24 @@ textarea { resize: vertical; min-height: 60px; }
 .tip-card .tip-label { font-size: .7rem; color: var(--accent); text-transform: uppercase; font-weight: 600; margin-bottom: 4px; letter-spacing: .5px; }
 .tip-card p { font-size: .85rem; color: var(--text-secondary); line-height: 1.5; }
 
+/* === MEAL LOGGING === */
+.meal-logged { border-color: rgba(82,183,136,.2) !important; }
+.meal-item-edit { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.mei-text { flex: 1; font-size: .85rem; color: var(--text-secondary); }
+.mei-macros { font-size: .72rem; color: var(--text-muted); white-space: nowrap; }
+.mei-delete { background: none; border: none; color: var(--coral); cursor: pointer; font-size: 1.1rem; padding: 2px 6px; border-radius: 4px; }
+.mei-delete:hover { background: rgba(224,107,94,.1); }
+.meal-add-row { margin-top: 10px; }
+.meal-search { width: 100%; padding: 10px 12px; border-radius: 8px; background: var(--bg-deep); border: 1px solid var(--border-hover); color: var(--text-primary); font-size: .85rem; font-family: inherit; outline: none; }
+.meal-search:focus { border-color: var(--accent); }
+.meal-search-results { background: var(--bg-card-alt); border-radius: 0 0 8px 8px; max-height: 160px; overflow-y: auto; border: 1px solid var(--border); border-top: none; }
+.meal-search-item { padding: 10px 12px; cursor: pointer; font-size: .85rem; color: var(--text-primary); border-bottom: 1px solid var(--border); transition: background .1s; }
+.meal-search-item:hover { background: var(--bg-hover); }
+.meal-search-item:last-child { border-bottom: none; }
+.meal-adjusted-note { font-size: .75rem; color: var(--amber); padding: 6px 0; font-weight: 500; }
+.macro-consumed { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0 4px; font-size: .75rem; text-align: center; color: var(--text-muted); }
+.meal-edit-body { padding-top: 12px !important; }
+
 /* === PERFIL PAGE === */
 .info-grid { display: grid; gap: 1px; background: var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; box-shadow: var(--card-shadow); }
 .info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-card); }

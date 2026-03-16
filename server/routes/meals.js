@@ -2,7 +2,8 @@ import { Router } from 'express';
 import authenticate from '../middleware/auth.js';
 import { query } from '../db.js';
 import { generateWeekPlan } from '../services/meal-generator.js';
-import { DIET_RULES } from '../data/foods.js';
+import { FOODS, DIET_RULES } from '../data/foods.js';
+import { resolveMacros, getConsumedMacros, getLoggedMealIndexes, calcRemainingTargets } from '../services/meal-adjuster.js';
 
 const router = Router();
 router.use(authenticate);
@@ -44,6 +45,92 @@ router.get('/:weekNum', async (req, res) => {
     process.stderr.write(`Meal generation error: ${err.message}\n`);
     res.status(500).json({ error: 'Erro ao gerar plano de refeicoes' });
   }
+});
+
+// POST /api/meals/log — Log what the user actually ate
+router.post('/log', async (req, res) => {
+  try {
+    const { date, weekNum, dayNum, mealIndex, mealType, originalItems, loggedItems } = req.body;
+
+    if (!date || mealIndex === undefined || !loggedItems || !Array.isArray(loggedItems)) {
+      return res.status(400).json({ error: 'date, mealIndex e loggedItems sao obrigatorios' });
+    }
+
+    const macros = resolveMacros(loggedItems);
+
+    await query(
+      `INSERT INTO meal_logs (user_id, date, week_num, day_num, meal_index, meal_type, original_items, logged_items, total_kcal, total_prot, total_carb, total_fat)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       ON CONFLICT (user_id, date, meal_index)
+       DO UPDATE SET logged_items = $8, total_kcal = $9, total_prot = $10, total_carb = $11, total_fat = $12, logged_at = NOW()`,
+      [req.userId, date, weekNum || 1, dayNum || 1, mealIndex, mealType || '', originalItems || '', JSON.stringify(loggedItems), macros.kcal, macros.prot, macros.carb, macros.fat]
+    );
+
+    // Calculate adjusted remaining
+    const userResult = await query('SELECT * FROM users WHERE id = $1', [req.userId]);
+    const user = userResult.rows[0];
+    const consumed = await getConsumedMacros(req.userId, date);
+    const loggedIndexes = await getLoggedMealIndexes(req.userId, date);
+
+    // Get total meals for this day from the plan
+    const days = generateWeekPlan(user, weekNum || 1);
+    const dayData = days[(dayNum || 1) - 1];
+    const totalMeals = dayData ? dayData.meals.length : 6;
+
+    const adjustment = calcRemainingTargets(user, consumed, totalMeals, loggedIndexes);
+
+    res.json({
+      logged: { mealIndex, macros },
+      consumed: adjustment.consumed,
+      target: adjustment.target,
+      remaining: adjustment.remaining,
+      perMeal: adjustment.perMeal,
+      loggedIndexes
+    });
+  } catch (err) {
+    process.stderr.write(`Meal log error: ${err.message}\n`);
+    res.status(500).json({ error: 'Erro ao registrar refeicao' });
+  }
+});
+
+// GET /api/meals/logs/:date — Get all logs for a date
+router.get('/logs/:date', async (req, res) => {
+  try {
+    const { date } = req.params;
+    const result = await query(
+      'SELECT * FROM meal_logs WHERE user_id = $1 AND date = $2 ORDER BY meal_index',
+      [req.userId, date]
+    );
+
+    const consumed = await getConsumedMacros(req.userId, date);
+    const loggedIndexes = result.rows.map(r => r.meal_index);
+
+    res.json({
+      date,
+      logs: result.rows,
+      consumed,
+      loggedIndexes
+    });
+  } catch (err) {
+    process.stderr.write(`Get meal logs error: ${err.message}\n`);
+    res.status(500).json({ error: 'Erro ao buscar registros' });
+  }
+});
+
+// GET /api/meals/foods/search?q=fran — Search foods
+router.get('/foods/search', async (req, res) => {
+  const q = (req.query.q || '').toLowerCase().trim();
+  if (!q || q.length < 2) return res.json([]);
+
+  const results = FOODS.filter(f =>
+    f.name.toLowerCase().includes(q) || f.id.includes(q)
+  ).slice(0, 10).map(f => ({
+    foodId: f.id, name: f.name, serving: f.serving,
+    kcal: f.kcal, prot: f.prot, carb: f.carb, fat: f.fat,
+    preps: f.preps
+  }));
+
+  res.json(results);
 });
 
 export default router;

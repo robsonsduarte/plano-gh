@@ -16,6 +16,15 @@ let state = {
   onboardingStep: 1,
   quizStep: 1,
   quizAnswers: {},
+  // Meal logging
+  mealLogs: {},          // { mealIndex: { loggedItems, macros } }
+  loggedIndexes: [],     // which meals have been logged today
+  editingMeal: null,     // index of meal being edited
+  editingItems: [],      // items being edited [{foodId, name, serving, prep, kcal, prot, carb, fat}]
+  dayConsumed: null,     // { kcal, prot, carb, fat }
+  dayRemaining: null,    // { kcal, prot, carb, fat }
+  dayPerMeal: null,      // per-remaining-meal target
+  searchResults: [],     // food search results
 };
 
 // --- CONSTANTS ---
@@ -616,6 +625,7 @@ async function loadAndRenderCurrentPage(name) {
   switch (page) {
     case 'cardapio':
       if (!state.mealPlan) await loadMealPlan(state.currentWeek);
+      await loadMealLogs();
       renderCardapio();
       break;
     case 'perfil':
@@ -688,6 +698,17 @@ function renderCardapio() {
     </div>
   `;
 
+  // Consumed vs remaining summary (if any meals logged)
+  if (state.dayConsumed && state.dayConsumed.kcal > 0) {
+    const c = state.dayConsumed;
+    const r = state.dayRemaining || { kcal: kcal - c.kcal, prot: prot - c.prot, carb: carb - c.carb, fat: fat - c.fat };
+    html += `<div class="macro-consumed">
+      <div><span style="color:var(--accent)">${c.kcal}</span><br>consumido</div>
+      <div><span style="color:var(--amber)">${Math.max(0, r.kcal)}</span><br>restante</div>
+      <div><span style="color:var(--text-muted)">${kcal}</span><br>meta</div>
+    </div>`;
+  }
+
   // Fasting badge
   if (isFasting) {
     html += `<div class="fasting-badge">⚡ Dia de jejum intermitente — janela alimentar: 12h as 20h</div>`;
@@ -701,29 +722,76 @@ function renderCardapio() {
     meals.forEach((meal, i) => {
       const barCls = mealBarClass(meal.name || meal.type);
       const isOpen = state.openMeal === i;
-      // items is a string like "Food (serving) — prep · Food2 (serving) — prep"
+      const isEditing = state.editingMeal === i;
+      const isLogged = state.loggedIndexes.includes(i);
+      const log = state.mealLogs[i];
+
       const itemsStr = typeof meal.items === 'string' ? meal.items : '';
       const itemsList = itemsStr.split(' · ').filter(Boolean);
-      const preview = itemsList[0] || '';
+      const preview = isLogged && log ? log.loggedItems.map(it => it.name).join(', ') : (itemsList[0] || '');
+
       html += `
-        <div class="meal-card${isOpen ? ' open' : ''}" data-meal="${i}">
+        <div class="meal-card${isOpen ? ' open' : ''}${isLogged ? ' meal-logged' : ''}" data-meal="${i}">
           <div class="meal-head" onclick="toggleMeal(${i})">
             <div class="meal-bar ${barCls}"></div>
             <div class="meal-info">
-              <div class="meal-title">${esc(meal.name || meal.type)}</div>
+              <div class="meal-title">${esc(meal.name || meal.type)}${isLogged ? ' <span style="color:var(--accent)">✓</span>' : ''}</div>
               <div class="meal-meta">
                 ${meal.time ? `<span>${meal.time}</span>` : ''}
+                ${isLogged && log ? `<span style="color:var(--accent)">${log.macros.kcal} kcal</span>` : ''}
                 ${meal.gh ? '<span class="gh-tag">↑ GH</span>' : ''}
               </div>
             </div>
             <span class="meal-arrow">▼</span>
           </div>
-          ${!isOpen ? `<div class="meal-preview">${esc(preview)}...</div>` : ''}
-          <div class="meal-body">
-            ${itemsList.map(item => `<div class="meal-item">· ${esc(item)}</div>`).join('')}
-          </div>
+          ${!isOpen ? `<div class="meal-preview">${esc(preview)}...</div>` : ''}`;
+
+      // OPEN STATE — 3 modes
+      if (isOpen && isEditing) {
+        // EDIT MODE
+        html += `<div class="meal-body meal-edit-body">`;
+        state.editingItems.forEach((item, idx) => {
+          html += `<div class="meal-item-edit">
+            <span class="mei-text">· ${esc(item.name)}${item.serving ? ` (${esc(item.serving)})` : ''}${item.prep ? ` — ${esc(item.prep)}` : ''}</span>
+            <span class="mei-macros">${item.kcal}kcal</span>
+            <button class="mei-delete" onclick="removeEditItem(${idx})">✕</button>
+          </div>`;
+        });
+        const editTotal = state.editingItems.reduce((s, it) => s + (it.kcal || 0), 0);
+        html += `<div style="font-size:.75rem;color:var(--text-muted);padding:6px 0;text-align:right">Total: ${editTotal} kcal</div>`;
+        html += `<div class="meal-add-row">
+          <input type="text" class="meal-search" id="meal-search-input" placeholder="Buscar alimento para adicionar..." oninput="searchFoodForMeal(this.value)">
+          <div class="meal-search-results" id="meal-search-results"></div>
         </div>
-      `;
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-primary btn-full" onclick="confirmMeal(${i})">Confirmar refeicao</button>
+          <button class="btn btn-secondary" onclick="cancelEditMode()">Cancelar</button>
+        </div>
+        </div>`;
+      } else if (isOpen && isLogged && log) {
+        // LOGGED MODE — show what was actually eaten
+        html += `<div class="meal-body">`;
+        log.loggedItems.forEach(item => {
+          html += `<div class="meal-item">· ${esc(item.name)}${item.serving ? ` (${esc(item.serving)})` : ''}${item.prep ? ` — ${esc(item.prep)}` : ''}</div>`;
+        });
+        html += `<div style="font-size:.75rem;color:var(--accent);padding:6px 0">Consumido: ${log.macros.kcal} kcal · ${log.macros.prot}g prot · ${log.macros.carb}g carb · ${log.macros.fat}g gord</div>`;
+        html += `<button class="btn btn-secondary btn-full" style="margin-top:4px" onclick="enterEditMode(${i})">Re-editar</button>`;
+        html += `</div>`;
+      } else if (isOpen) {
+        // NORMAL MODE — show suggested items + edit button
+        html += `<div class="meal-body">`;
+        itemsList.forEach(item => {
+          html += `<div class="meal-item">· ${esc(item)}</div>`;
+        });
+        // Show per-meal target if adjusted
+        if (state.dayPerMeal && !isLogged) {
+          html += `<div class="meal-adjusted-note">Meta ajustada: ~${state.dayPerMeal.kcal} kcal para esta refeicao</div>`;
+        }
+        html += `<button class="btn btn-primary btn-full" style="margin-top:8px" onclick="enterEditMode(${i})">Registrar o que comi</button>`;
+        html += `</div>`;
+      }
+
+      html += `</div>`;
     });
   }
 
@@ -740,8 +808,119 @@ function renderCardapio() {
 }
 
 function toggleMeal(i) {
+  if (state.editingMeal === i) return; // don't collapse while editing
   state.openMeal = state.openMeal === i ? -1 : i;
   renderCardapio();
+}
+
+// --- MEAL LOGGING ---
+function enterEditMode(mealIndex) {
+  const days = state.mealPlan?.days || [];
+  const dayData = days[state.currentDay - 1];
+  const meal = dayData?.meals?.[mealIndex];
+  if (!meal) return;
+
+  // Parse itemDetails or fallback to parsing the items string
+  if (meal.itemDetails && meal.itemDetails.length) {
+    state.editingItems = meal.itemDetails.map(d => ({ ...d }));
+  } else {
+    const parts = (meal.items || '').split(' · ').filter(Boolean);
+    state.editingItems = parts.map(p => ({ foodId: null, name: p, serving: '', prep: '', kcal: 0, prot: 0, carb: 0, fat: 0 }));
+  }
+
+  // If this meal was previously logged, load those items instead
+  if (state.mealLogs[mealIndex]) {
+    state.editingItems = state.mealLogs[mealIndex].loggedItems.map(d => ({ ...d }));
+  }
+
+  state.editingMeal = mealIndex;
+  state.openMeal = mealIndex;
+  state.searchResults = [];
+  renderCardapio();
+}
+
+function cancelEditMode() {
+  state.editingMeal = null;
+  state.editingItems = [];
+  state.searchResults = [];
+  renderCardapio();
+}
+
+function removeEditItem(idx) {
+  state.editingItems.splice(idx, 1);
+  renderCardapio();
+}
+
+async function searchFoodForMeal(query) {
+  if (!query || query.length < 2) { state.searchResults = []; renderCardapio(); return; }
+  const results = await api('GET', `/meals/foods/search?q=${encodeURIComponent(query)}`);
+  state.searchResults = results || [];
+  renderSearchResults();
+}
+
+function renderSearchResults() {
+  const container = document.getElementById('meal-search-results');
+  if (!container) return;
+  container.innerHTML = state.searchResults.map((f, i) =>
+    `<div class="meal-search-item" onclick="addSearchedFood(${i})">${esc(f.name)} <span style="color:var(--text-muted);font-size:.75rem">(${f.serving} · ${f.kcal}kcal)</span></div>`
+  ).join('') || (state.searchResults.length === 0 ? '<div class="meal-search-item" style="color:var(--text-muted)">Nenhum resultado</div>' : '');
+}
+
+function addSearchedFood(searchIdx) {
+  const food = state.searchResults[searchIdx];
+  if (!food) return;
+  state.editingItems.push({
+    foodId: food.foodId, name: food.name, serving: food.serving,
+    prep: food.preps?.[0] || '', kcal: food.kcal, prot: food.prot, carb: food.carb, fat: food.fat
+  });
+  state.searchResults = [];
+  renderCardapio();
+}
+
+async function confirmMeal(mealIndex) {
+  const days = state.mealPlan?.days || [];
+  const dayData = days[state.currentDay - 1];
+  const meal = dayData?.meals?.[mealIndex];
+
+  const today = new Date().toISOString().split('T')[0];
+  const body = {
+    date: today,
+    weekNum: state.currentWeek,
+    dayNum: state.currentDay,
+    mealIndex,
+    mealType: meal?.type || '',
+    originalItems: meal?.items || '',
+    loggedItems: state.editingItems
+  };
+
+  const res = await api('POST', '/meals/log', body);
+  if (res && !res.error) {
+    state.mealLogs[mealIndex] = { loggedItems: [...state.editingItems], macros: res.logged?.macros };
+    state.loggedIndexes = res.loggedIndexes || [];
+    state.dayConsumed = res.consumed;
+    state.dayRemaining = res.remaining;
+    state.dayPerMeal = res.perMeal;
+    state.editingMeal = null;
+    state.editingItems = [];
+    state.searchResults = [];
+    renderCardapio();
+  }
+}
+
+async function loadMealLogs() {
+  const today = new Date().toISOString().split('T')[0];
+  const data = await api('GET', `/meals/logs/${today}`);
+  if (data && data.logs) {
+    state.mealLogs = {};
+    for (const log of data.logs) {
+      state.mealLogs[log.meal_index] = {
+        loggedItems: typeof log.logged_items === 'string' ? JSON.parse(log.logged_items) : log.logged_items,
+        macros: { kcal: Number(log.total_kcal), prot: Number(log.total_prot), carb: Number(log.total_carb), fat: Number(log.total_fat) }
+      };
+    }
+    state.loggedIndexes = data.loggedIndexes || [];
+    state.dayConsumed = data.consumed;
+  }
 }
 
 // --- PERFIL ---
