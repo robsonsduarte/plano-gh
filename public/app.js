@@ -749,24 +749,27 @@ function renderCardapio() {
       // OPEN STATE — 3 modes
       if (isOpen && isEditing) {
         // EDIT MODE
-        html += `<div class="meal-body meal-edit-body">`;
-        state.editingItems.forEach((item, idx) => {
-          html += `<div class="meal-item-edit">
+        const editItemsHtml = state.editingItems.map((item, idx) =>
+          `<div class="meal-item-edit">
             <span class="mei-text">· ${esc(item.name)}${item.serving ? ` (${esc(item.serving)})` : ''}${item.prep ? ` — ${esc(item.prep)}` : ''}</span>
             <span class="mei-macros">${item.kcal}kcal</span>
             <button class="mei-delete" onclick="removeEditItem(${idx})">✕</button>
-          </div>`;
-        });
+          </div>`
+        ).join('');
         const editTotal = state.editingItems.reduce((s, it) => s + (it.kcal || 0), 0);
-        html += `<div style="font-size:.75rem;color:var(--text-muted);padding:6px 0;text-align:right">Total: ${editTotal} kcal</div>`;
-        html += `<div class="meal-add-row">
-          <input type="text" class="meal-search" id="meal-search-input" placeholder="Buscar alimento para adicionar..." oninput="searchFoodForMeal(this.value)">
-          <div class="meal-search-results" id="meal-search-results"></div>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <button class="btn btn-primary btn-full" onclick="confirmMeal(${i})">Confirmar refeicao</button>
-          <button class="btn btn-secondary" onclick="cancelEditMode()">Cancelar</button>
-        </div>
+        html += `<div class="meal-body meal-edit-body">
+          <div class="edit-items-list">
+            ${editItemsHtml}
+            <div style="font-size:.75rem;color:var(--text-muted);padding:6px 0;text-align:right">Total: ${editTotal} kcal</div>
+          </div>
+          <div class="meal-add-row">
+            <input type="text" class="meal-search" id="meal-search-input" placeholder="Buscar alimento para adicionar..." oninput="searchFoodForMeal(this.value)">
+            <div class="meal-search-results" id="meal-search-results"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn btn-primary btn-full" onclick="confirmMeal(${i})">Confirmar refeicao</button>
+            <button class="btn btn-secondary" onclick="cancelEditMode()">Cancelar</button>
+          </div>
         </div>`;
       } else if (isOpen && isLogged && log) {
         // LOGGED MODE — show what was actually eaten
@@ -848,14 +851,23 @@ function cancelEditMode() {
 
 function removeEditItem(idx) {
   state.editingItems.splice(idx, 1);
-  renderCardapio();
+  renderEditItems();
 }
 
-async function searchFoodForMeal(query) {
-  if (!query || query.length < 2) { state.searchResults = []; renderCardapio(); return; }
-  const results = await api('GET', `/meals/foods/search?q=${encodeURIComponent(query)}`);
-  state.searchResults = results || [];
-  renderSearchResults();
+let _searchTimeout = null;
+async function searchFoodForMeal(q) {
+  clearTimeout(_searchTimeout);
+  if (!q || q.length < 2) {
+    state.searchResults = [];
+    const c = document.getElementById('meal-search-results');
+    if (c) c.innerHTML = '';
+    return;
+  }
+  _searchTimeout = setTimeout(async () => {
+    const results = await api('GET', `/meals/foods/search?q=${encodeURIComponent(q)}`);
+    state.searchResults = results || [];
+    renderSearchResults();
+  }, 250);
 }
 
 function renderSearchResults() {
@@ -863,7 +875,7 @@ function renderSearchResults() {
   if (!container) return;
   container.innerHTML = state.searchResults.map((f, i) =>
     `<div class="meal-search-item" onclick="addSearchedFood(${i})">${esc(f.name)} <span style="color:var(--text-muted);font-size:.75rem">(${f.serving} · ${f.kcal}kcal)</span></div>`
-  ).join('') || (state.searchResults.length === 0 ? '<div class="meal-search-item" style="color:var(--text-muted)">Nenhum resultado</div>' : '');
+  ).join('') || '<div class="meal-search-item" style="color:var(--text-muted)">Nenhum resultado</div>';
 }
 
 function addSearchedFood(searchIdx) {
@@ -874,7 +886,33 @@ function addSearchedFood(searchIdx) {
     prep: food.preps?.[0] || '', kcal: food.kcal, prot: food.prot, carb: food.carb, fat: food.fat
   });
   state.searchResults = [];
-  renderCardapio();
+  // Clear search and re-render only the edit body
+  const input = document.getElementById('meal-search-input');
+  if (input) input.value = '';
+  const results = document.getElementById('meal-search-results');
+  if (results) results.innerHTML = '';
+  renderEditItems();
+}
+
+function renderEditItems() {
+  // Find the edit body and update just the items list without destroying the search input
+  const editBody = document.querySelector('.meal-edit-body');
+  if (!editBody) { renderCardapio(); return; }
+
+  const itemsHtml = state.editingItems.map((item, idx) =>
+    `<div class="meal-item-edit">
+      <span class="mei-text">· ${esc(item.name)}${item.serving ? ` (${esc(item.serving)})` : ''}${item.prep ? ` — ${esc(item.prep)}` : ''}</span>
+      <span class="mei-macros">${item.kcal}kcal</span>
+      <button class="mei-delete" onclick="removeEditItem(${idx})">✕</button>
+    </div>`
+  ).join('');
+  const editTotal = state.editingItems.reduce((s, it) => s + (it.kcal || 0), 0);
+
+  // Update only the items container (everything before the meal-add-row)
+  const itemsContainer = editBody.querySelector('.edit-items-list');
+  if (itemsContainer) {
+    itemsContainer.innerHTML = itemsHtml + `<div style="font-size:.75rem;color:var(--text-muted);padding:6px 0;text-align:right">Total: ${editTotal} kcal</div>`;
+  }
 }
 
 async function confirmMeal(mealIndex) {
