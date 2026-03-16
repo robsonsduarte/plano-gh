@@ -1,13 +1,4 @@
-import OpenAI from 'openai';
-
-// Lazy init — don't crash if key is missing (feature just won't work)
-let client = null;
-function getClient() {
-  if (!client && process.env.OPENAI_API_KEY) {
-    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  }
-  return client;
-}
+import { chatCompletion } from './ai-client.js';
 
 const SYSTEM_PROMPT = `Voce e um nutricionista especializado em alimentos brasileiros.
 Quando o usuario descrever um alimento (por nome ou foto), responda APENAS com um JSON valido:
@@ -25,15 +16,9 @@ Se for um prato composto (ex: foto de um prato feito), retorne um array de objet
 Valores devem ser para a porcao tipica informada. Arredonde para inteiros.
 NAO inclua markdown, explicacoes ou texto fora do JSON.`;
 
-/**
- * Estimate macros from a text description of a food.
- */
 export async function estimateFromText(description) {
   try {
-    const ai = getClient();
-    if (!ai) return { error: 'OPENAI_API_KEY nao configurada' };
-    const response = await ai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const { text, provider } = await chatCompletion({
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: `Estime os macronutrientes para: ${description}` }
@@ -41,24 +26,19 @@ export async function estimateFromText(description) {
       temperature: 0.3,
       max_tokens: 500
     });
-
-    const text = response.choices[0]?.message?.content?.trim();
-    return parseAIResponse(text);
+    if (!text) return { error: 'Nenhum provedor de IA disponivel' };
+    const result = parseAIResponse(text);
+    result.provider = provider;
+    return result;
   } catch (err) {
     process.stderr.write(`Food AI text error: ${err.message}\n`);
     return { error: 'Erro ao consultar IA' };
   }
 }
 
-/**
- * Estimate macros from a photo (base64 image).
- */
 export async function estimateFromImage(base64Image, mimeType = 'image/jpeg') {
   try {
-    const ai = getClient();
-    if (!ai) return { error: 'OPENAI_API_KEY nao configurada' };
-    const response = await ai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const { text, provider } = await chatCompletion({
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         {
@@ -70,11 +50,13 @@ export async function estimateFromImage(base64Image, mimeType = 'image/jpeg') {
         }
       ],
       temperature: 0.3,
-      max_tokens: 1000
+      max_tokens: 1000,
+      needsVision: true
     });
-
-    const text = response.choices[0]?.message?.content?.trim();
-    return parseAIResponse(text);
+    if (!text) return { error: 'Nenhum provedor de IA disponivel' };
+    const result = parseAIResponse(text);
+    result.provider = provider;
+    return result;
   } catch (err) {
     process.stderr.write(`Food AI image error: ${err.message}\n`);
     return { error: 'Erro ao analisar imagem' };
@@ -83,10 +65,8 @@ export async function estimateFromImage(base64Image, mimeType = 'image/jpeg') {
 
 function parseAIResponse(text) {
   try {
-    // Strip markdown code blocks if present
     let clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     const parsed = JSON.parse(clean);
-    // Normalize: always return array
     const items = Array.isArray(parsed) ? parsed : [parsed];
     return { items };
   } catch (e) {

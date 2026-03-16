@@ -1,16 +1,7 @@
 import { FOODS } from '../data/foods.js';
 import { calcTMB, calcTDEE, calcMacros } from './nutrition.js';
 import { query } from '../db.js';
-import { estimateFromText } from './food-ai.js';
-import OpenAI from 'openai';
-
-let aiClient = null;
-function getAI() {
-  if (!aiClient && process.env.OPENAI_API_KEY) {
-    aiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  }
-  return aiClient;
-}
+import { chatCompletion, availableProviders } from './ai-client.js';
 
 export function resolveMacros(loggedItems) {
   let kcal = 0, prot = 0, carb = 0, fat = 0;
@@ -111,11 +102,10 @@ export async function adjustDayMeals(user, weekNum, dayNum, originalMeals) {
     return { meals: originalMeals, target, consumed, remaining, perMeal: null, loggedIndexes };
   }
 
-  // Try AI adjustment
-  const ai = getAI();
-  if (ai) {
+  // Try AI adjustment (OpenAI → Groq fallback)
+  if (availableProviders().length > 0) {
     try {
-      const adjustedMeals = await aiAdjust(ai, user, target, consumed, remaining, unloggedMeals, originalMeals);
+      const adjustedMeals = await aiAdjust(user, target, consumed, remaining, unloggedMeals, originalMeals);
       if (adjustedMeals) {
         return { meals: adjustedMeals, target, consumed, remaining, perMeal: null, loggedIndexes };
       }
@@ -128,7 +118,7 @@ export async function adjustDayMeals(user, weekNum, dayNum, originalMeals) {
   return { meals: originalMeals, target, consumed, remaining, perMeal: null, loggedIndexes };
 }
 
-async function aiAdjust(ai, user, target, consumed, remaining, unloggedMeals, originalMeals) {
+async function aiAdjust(user, target, consumed, remaining, unloggedMeals, originalMeals) {
   const userContext = `Perfil: ${user.sex === 'F' ? 'Mulher' : 'Homem'}, ${user.age} anos, ${user.weight}kg, ${user.height}cm. Dieta: ${user.diet_type}. Objetivo: ${user.diet_type === 'keto' ? 'cetose' : 'perda de peso com saude'}.`;
 
   const consumedText = `Ja consumido hoje: ${consumed.kcal}kcal, ${consumed.prot}g prot, ${consumed.carb}g carb, ${consumed.fat}g gord.`;
@@ -149,8 +139,7 @@ ${mealsText}
 
 Reajuste SOMENTE as refeicoes que precisam mudar para que o dia fique equilibrado. Respeite as regras nutricionais.`;
 
-  const response = await ai.chat.completions.create({
-    model: 'gpt-4o-mini',
+  const { text, provider } = await chatCompletion({
     messages: [
       { role: 'system', content: ADJUSTER_PROMPT },
       { role: 'user', content: prompt }
@@ -159,8 +148,8 @@ Reajuste SOMENTE as refeicoes que precisam mudar para que o dia fique equilibrad
     max_tokens: 1500
   });
 
-  const text = response.choices[0]?.message?.content?.trim();
   if (!text) return null;
+  process.stderr.write(`Meal adjust by: ${provider}\n`);
 
   try {
     const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
