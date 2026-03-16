@@ -1,6 +1,10 @@
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
 // slots: which meal slots this food is appropriate for
 // cafe=breakfast, lanche=snack, almoco=lunch, jantar=dinner, ceia=supper, any=all
-export const FOODS = [
+const CURATED_FOODS = [
   // PROTEINS
   { id:'eggs', name:'Ovos', serving:'3 unidades', cat:'protein', kcal:210, prot:18, carb:1, fat:15, diets:['N','K','C','IF'], tags:['gh'], slots:['cafe','almoco','jantar'], preps:['mexidos com curcuma','cozidos','omelete com espinafre'] },
   { id:'chicken', name:'Frango (peito)', serving:'160g', cat:'protein', kcal:264, prot:40, carb:0, fat:6, diets:['N','K','C','IF'], tags:[], slots:['almoco','jantar'], preps:['grelhado com ervas','desfiado','ao forno com curcuma'] },
@@ -84,6 +88,22 @@ export const FOODS = [
   { id:'butter', name:'Manteiga', serving:'15g', cat:'fat', kcal:108, prot:0, carb:0, fat:12, diets:['K','C'], tags:[], slots:['cafe','almoco','jantar'], preps:['para cozinhar','no cafe'] },
   { id:'brazil_nuts', name:'Castanha do Para', serving:'3 unidades', cat:'fat', kcal:100, prot:2, carb:2, fat:10, diets:['N','K','IF'], tags:['gh'], slots:['lanche','cafe'], preps:['in natura'] },
   { id:'flaxseed', name:'Linhaca', serving:'10g', cat:'fat', kcal:53, prot:2, carb:3, fat:4, diets:['N','K','IF'], tags:[], slots:['cafe','lanche','almoco'], preps:['triturada em vitamina','em salada'] },
+];
+
+// Load TACO (Tabela Brasileira de Composição de Alimentos) — 542 foods
+const __dirname = dirname(fileURLToPath(import.meta.url));
+let TACO_FOODS = [];
+try {
+  TACO_FOODS = JSON.parse(readFileSync(join(__dirname, 'taco-foods.json'), 'utf8'));
+} catch (e) {
+  process.stderr.write('Warning: taco-foods.json not found, using curated foods only\n');
+}
+
+// Merge: curated foods take priority (better preps/slots), TACO fills the gaps
+const curatedIds = new Set(CURATED_FOODS.map(f => f.id));
+export const FOODS = [
+  ...CURATED_FOODS,
+  ...TACO_FOODS.filter(f => !curatedIds.has(f.id))
 ];
 
 export const MEAL_TEMPLATES = {

@@ -1,6 +1,13 @@
 import OpenAI from 'openai';
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Lazy init — don't crash if key is missing (feature just won't work)
+let client = null;
+function getClient() {
+  if (!client && process.env.OPENAI_API_KEY) {
+    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return client;
+}
 
 const SYSTEM_PROMPT = `Voce e um nutricionista especializado em alimentos brasileiros.
 Quando o usuario descrever um alimento (por nome ou foto), responda APENAS com um JSON valido:
@@ -23,7 +30,9 @@ NAO inclua markdown, explicacoes ou texto fora do JSON.`;
  */
 export async function estimateFromText(description) {
   try {
-    const response = await client.chat.completions.create({
+    const ai = getClient();
+    if (!ai) return { error: 'OPENAI_API_KEY nao configurada' };
+    const response = await ai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
@@ -46,7 +55,9 @@ export async function estimateFromText(description) {
  */
 export async function estimateFromImage(base64Image, mimeType = 'image/jpeg') {
   try {
-    const response = await client.chat.completions.create({
+    const ai = getClient();
+    if (!ai) return { error: 'OPENAI_API_KEY nao configurada' };
+    const response = await ai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
