@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Plano Dieta">
+  <meta name="theme-color" content="#111318">
+  <title>Plano Dieta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=6">
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark')</script>
+</head>
+<body>
+  <!-- SPLASH -->
+  <div id="splash">
+    <div class="splash-icon">🥗</div>
+    <h1>Plano Dieta</h1>
+    <p>Sua dieta personalizada</p>
+  </div>
+
+  <!-- AUTH SCREEN -->
+  <div id="auth-screen" class="screen" style="display:none">
+    <div class="auth-container">
+      <div class="auth-logo">🥗</div>
+      <h1 class="auth-title">Plano Dieta</h1>
+      <p class="auth-subtitle">Sua dieta personalizada</p>
+
+      <form id="login-form" class="auth-form">
+        <h2>Entrar</h2>
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" placeholder="seu@email.com" required>
+        </div>
+        <div class="field">
+          <label for="login-password">Senha</label>
+          <input type="password" id="login-password" placeholder="Sua senha" required>
+        </div>
+        <div id="login-error" class="form-error"></div>
+        <button type="submit" class="btn btn-primary btn-full">Entrar</button>
+        <p class="auth-switch">Novo por aqui? <a href="#" id="show-register">Criar conta</a></p>
+      </form>
+
+      <form id="register-form" class="auth-form" style="display:none">
+        <h2>Criar Conta</h2>
+        <div class="field">
+          <label for="reg-name">Nome</label>
+          <input type="text" id="reg-name" placeholder="Seu nome" required>
+        </div>
+        <div class="field">
+          <label for="reg-email">Email</label>
+          <input type="email" id="reg-email" placeholder="seu@email.com" required>
+        </div>
+        <div class="field">
+          <label for="reg-password">Senha</label>
+          <input type="password" id="reg-password" placeholder="Min. 6 caracteres" minlength="6" required>
+        </div>
+        <div id="register-error" class="form-error"></div>
+        <button type="submit" class="btn btn-primary btn-full">Criar Conta</button>
+        <p class="auth-switch">Ja tem conta? <a href="#" id="show-login">Entrar</a></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ONBOARDING WIZARD -->
+  <div id="onboarding" class="screen" style="display:none">
+    <div class="ob-header">
+      <button class="ob-back" id="ob-back-btn" style="visibility:hidden">&larr;</button>
+      <div class="ob-progress">
+        <div class="ob-progress-bar" id="ob-progress-bar" style="width:25%"></div>
+      </div>
+      <span class="ob-step-label" id="ob-step-label">Passo 1 de 4</span>
+    </div>
+
+    <!-- Step 1: Personal Data -->
+    <div class="ob-step active" id="ob-step-1">
+      <h2>Seus dados</h2>
+      <p class="ob-desc">Precisamos dessas informacoes para calcular sua dieta ideal.</p>
+      <div style="background:rgba(199,86,67,.12);border:1px solid rgba(199,86,67,.25);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:.75rem;color:var(--coral);line-height:1.5">Este app oferece sugestoes alimentares educativas. Consulte um profissional de saude antes de iniciar qualquer dieta, especialmente se tem condicoes medicas pre-existentes.</div>
+      <div class="field">
+        <label for="ob-name">Nome</label>
+        <input type="text" id="ob-name" placeholder="Seu nome">
+      </div>
+      <div class="field">
+        <label>Sexo</label>
+        <div class="radio-row">
+          <label class="radio-card"><input type="radio" name="ob-sex" value="M" checked><span>Masculino</span></label>
+          <label class="radio-card"><input type="radio" name="ob-sex" value="F"><span>Feminino</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="ob-age">Idade</label>
+        <input type="number" id="ob-age" placeholder="30" min="14" max="99">
+      </div>
+      <div class="field">
+        <label for="ob-height">Altura (cm)</label>
+        <input type="number" id="ob-height" placeholder="175" min="100" max="250">
+      </div>
+      <div class="field">
+        <label for="ob-weight">Peso (kg)</label>
+        <input type="number" id="ob-weight" placeholder="80" min="30" max="300" step="0.1">
+      </div>
+      <div class="field">
+        <label for="ob-activity">Nivel de atividade</label>
+        <select id="ob-activity">
+          <option value="sedentary">Sedentario (pouco ou nenhum exercicio)</option>
+          <option value="light">Leve (1-3x/semana)</option>
+          <option value="moderate" selected>Moderado (3-5x/semana)</option>
+          <option value="very_active">Ativo (6-7x/semana)</option>
+          <option value="extreme">Muito ativo (2x/dia ou trabalho fisico)</option>
+        </select>
+      </div>
+      <div id="ob-step1-error" class="form-error"></div>
+      <button class="btn btn-primary btn-full" id="ob-next-1">Continuar</button>
+    </div>
+
+    <!-- Step 2: Food Preferences -->
+    <div class="ob-step" id="ob-step-2">
+      <h2>Preferencias alimentares</h2>
+      <p class="ob-desc">Selecione os alimentos que voce gosta ou aceita comer.</p>
+      <div id="food-pref-grid"></div>
+      <h3 style="color:var(--coral);margin-top:18px;font-size:.95rem">Alimentos que voce NAO come</h3>
+      <p class="ob-desc" style="margin-bottom:8px">Desmarque acima os que nao come, ou selecione abaixo restricoes comuns.</p>
+      <div id="food-restrict-grid"></div>
+      <div class="field" style="margin-top:10px">
+        <label for="ob-restrictions-extra">Outras restricoes (texto livre)</label>
+        <input type="text" id="ob-restrictions-extra" placeholder="Ex: lactose, gluten...">
+      </div>
+      <button class="btn btn-primary btn-full" id="ob-next-2">Continuar</button>
+    </div>
+
+    <!-- Step 3: Quiz -->
+    <div class="ob-step" id="ob-step-3">
+      <h2>Questionario</h2>
+      <p class="ob-desc" id="quiz-progress">Pergunta 1 de 10</p>
+      <div id="quiz-container"></div>
+      <div class="quiz-nav">
+        <button class="btn btn-secondary" id="quiz-prev" style="visibility:hidden">Anterior</button>
+        <button class="btn btn-primary" id="quiz-next">Proxima</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Result -->
+    <div class="ob-step" id="ob-step-4">
+      <h2>Sua dieta recomendada</h2>
+      <div id="quiz-result"></div>
+      <div id="diet-picker" style="display:none">
+        <h3>Escolha sua dieta</h3>
+        <div id="diet-options"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app" class="app-container" style="display:none">
+    <div class="header">
+      <div class="h-top">
+        <span class="h-title">Plano Dieta</span>
+        <button class="theme-btn" id="theme-btn" aria-label="Alternar tema">
+          <svg class="theme-icon moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="theme-icon sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <span class="h-badge" id="kcalBadge">~1.950 kcal</span>
+      </div>
+      <div class="week-tabs" id="weekTabs"></div>
+    </div>
+    <div class="day-strip" id="dayStrip"></div>
+    <div class="scroll" id="mainScroll">
+      <div class="page active" id="page-cardapio"></div>
+      <div class="page" id="page-perfil"></div>
+      <div class="page" id="page-tracking"></div>
+      <div class="page" id="page-regras"></div>
+      <div class="page" id="page-mercado"></div>
+      <div class="page" id="page-config"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bnav" id="bottomNav" style="display:none">
+    <button class="nbtn active" data-page="cardapio"><span class="nicon">🥗</span>Cardapio</button>
+    <button class="nbtn" data-page="perfil"><span class="nicon">👤</span>Perfil</button>
+    <button class="nbtn" data-page="tracking"><span class="nicon">📊</span>Evolucao</button>
+    <button class="nbtn" data-page="regras"><span class="nicon">📋</span>Regras</button>
+    <button class="nbtn" data-page="mercado"><span class="nicon">🛒</span>Mercado</button>
+    <button class="nbtn" data-page="config"><span class="nicon">⚙️</span>Config</button>
+  </div>
+
+  <script src="app.js?v=5"></script>
+</body>
+</html>
