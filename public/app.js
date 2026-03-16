@@ -790,9 +790,11 @@ function renderCardapio() {
         itemsList.forEach(item => {
           html += `<div class="meal-item">· ${esc(item)}</div>`;
         });
-        // Show adjustment note only on meals that were actually regenerated
-        if (meal.adjusted && meal.targetKcal) {
-          html += `<div class="meal-adjusted-note">Cardapio reajustado · meta: ~${meal.targetKcal} kcal</div>`;
+        // Show adjustment note only on meals that were actually adjusted by AI
+        if (meal.adjusted) {
+          const note = meal.adjustNote || 'Reajustado para equilibrar o dia';
+          const mealTotal = meal.mealMacros?.kcal || '';
+          html += `<div class="meal-adjusted-note">🤖 ${esc(note)}${mealTotal ? ` · ~${mealTotal} kcal` : ''}</div>`;
         }
         html += `<button class="btn btn-primary btn-full" style="margin-top:8px" onclick="enterEditMode(${i})">Registrar o que comi</button>`;
         html += `</div>`;

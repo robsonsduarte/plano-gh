@@ -1,10 +1,17 @@
-import { FOODS, MEAL_TEMPLATES, IF_FASTING_DAYS } from '../data/foods.js';
+import { FOODS } from '../data/foods.js';
 import { calcTMB, calcTDEE, calcMacros } from './nutrition.js';
 import { query } from '../db.js';
+import { estimateFromText } from './food-ai.js';
+import OpenAI from 'openai';
 
-/**
- * Resolve macros from an array of logged items.
- */
+let aiClient = null;
+function getAI() {
+  if (!aiClient && process.env.OPENAI_API_KEY) {
+    aiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return aiClient;
+}
+
 export function resolveMacros(loggedItems) {
   let kcal = 0, prot = 0, carb = 0, fat = 0;
   for (const item of loggedItems) {
@@ -34,13 +41,47 @@ export async function getLoggedMealIndexes(userId, date) {
   return result.rows.map(r => r.meal_index);
 }
 
-// Meal types that should NOT be adjusted (light meals by nature)
-const FIXED_MEAL_TYPES = ['ceia', 'lanche_manha'];
+const ADJUSTER_PROMPT = `Voce e um nutricionista brasileiro especializado em reajuste de cardapios diarios.
+
+REGRAS OBRIGATORIAS:
+- Proteina pesada (carnes, peixes >150g) NAO deve ser servida no jantar apos 19h — prejudica sono e digestao
+- Jantar deve ser LEVE: sopas, saladas, ovos, peixes leves em porcoes moderadas
+- Ceia deve ser MINIMA: fruta leve, cha, iogurte — nunca mais que 100kcal
+- Porcoes devem ser REALISTAS: ninguem come 3 latas de atum ou 360g de espinafre numa refeicao
+- Maximo por porcao de proteina: 200g (carnes), 2 ovos extras, 1 lata de atum, 1 file de peixe
+- Maximo de azeite: 2 colheres de sopa por refeicao
+- Carboidratos complexos no almoco sao OK; no jantar reduzir pela metade
+- Se o deficit e grande, distribuir em MAIS itens variados, nao inflar porcoes
+- Preferir alimentos brasileiros comuns e acessiveis
+- Se o objetivo e perda de peso e as calorias restantes sao altas, esta OK ficar ABAIXO da meta — nao force
+
+Responda SOMENTE com JSON valido, sem markdown. Formato:
+[
+  {
+    "mealIndex": 2,
+    "type": "almoco",
+    "name": "Almoco",
+    "time": "12:30",
+    "items": "Descricao item1 · Descricao item2 · ...",
+    "itemDetails": [
+      {"name":"Frango (peito)","serving":"150g","prep":"grelhado","kcal":248,"prot":37,"carb":0,"fat":5},
+      ...
+    ],
+    "adjusted": true,
+    "adjustNote": "Explicacao breve do ajuste"
+  },
+  ...
+]
+
+Retorne SOMENTE as refeicoes que precisam de ajuste. Nao retorne refeicoes que nao mudaram.`;
 
 /**
- * Adjust remaining meals by scaling portions of existing items.
- * Ceia and snacks are never adjusted.
- * Main meals (almoco, jantar, lanche_tarde) get proportionally scaled.
+ * Use AI to intelligently adjust remaining meals considering:
+ * - Time of day and meal type
+ * - Digestive impact (no heavy protein at dinner)
+ * - Realistic portions
+ * - Nutritional balance
+ * - User's diet type and goal
  */
 export async function adjustDayMeals(user, weekNum, dayNum, originalMeals) {
   const date = new Date().toISOString().split('T')[0];
@@ -58,122 +99,100 @@ export async function adjustDayMeals(user, weekNum, dayNum, originalMeals) {
     fat: Math.max(0, target.fat - consumed.fat)
   };
 
-  // Identify adjustable meals (unlogged AND not a fixed type)
-  const adjustableIndexes = [];
-  const fixedUnloggedIndexes = [];
+  // Identify unlogged meals
+  const unloggedMeals = [];
   for (let i = 0; i < originalMeals.length; i++) {
-    if (loggedIndexes.includes(i)) continue;
-    const mealType = originalMeals[i]?.type || '';
-    if (FIXED_MEAL_TYPES.includes(mealType)) {
-      fixedUnloggedIndexes.push(i);
-    } else {
-      adjustableIndexes.push(i);
+    if (!loggedIndexes.includes(i)) {
+      unloggedMeals.push({ index: i, ...originalMeals[i] });
     }
   }
 
-  if (adjustableIndexes.length === 0) {
+  if (unloggedMeals.length === 0) {
     return { meals: originalMeals, target, consumed, remaining, perMeal: null, loggedIndexes };
   }
 
-  // Calculate kcal budget for fixed meals (ceia, snacks) — they keep original kcal
-  let fixedKcal = 0;
-  for (const idx of fixedUnloggedIndexes) {
-    const meal = originalMeals[idx];
-    fixedKcal += meal?.mealMacros?.kcal || 0;
+  // Try AI adjustment
+  const ai = getAI();
+  if (ai) {
+    try {
+      const adjustedMeals = await aiAdjust(ai, user, target, consumed, remaining, unloggedMeals, originalMeals);
+      if (adjustedMeals) {
+        return { meals: adjustedMeals, target, consumed, remaining, perMeal: null, loggedIndexes };
+      }
+    } catch (err) {
+      process.stderr.write(`AI meal adjust error: ${err.message}\n`);
+    }
   }
 
-  // Remaining kcal after subtracting fixed meals
-  const adjustableRemaining = Math.max(0, remaining.kcal - fixedKcal);
-
-  const perMeal = {
-    kcal: Math.round(adjustableRemaining / adjustableIndexes.length),
-    prot: Math.round(remaining.prot / adjustableIndexes.length),
-    carb: Math.round(remaining.carb / adjustableIndexes.length),
-    fat: Math.round(remaining.fat / adjustableIndexes.length)
-  };
-
-  // Scale each adjustable meal's portions to hit the per-meal target
-  const adjustedMeals = originalMeals.map((meal, idx) => {
-    if (loggedIndexes.includes(idx)) return meal; // logged — keep as is
-    if (!adjustableIndexes.includes(idx)) return meal; // fixed type — keep as is
-
-    const currentKcal = meal.mealMacros?.kcal || 0;
-    if (currentKcal === 0) return meal;
-
-    const scaleFactor = perMeal.kcal / currentKcal;
-
-    // Don't scale if difference is less than 15% — not worth adjusting
-    if (Math.abs(scaleFactor - 1) < 0.15) return meal;
-
-    // Scale itemDetails portions
-    const scaledDetails = (meal.itemDetails || []).map(item => {
-      const newKcal = Math.round(item.kcal * scaleFactor);
-      const newProt = Math.round(item.prot * scaleFactor);
-      const newCarb = Math.round(item.carb * scaleFactor);
-      const newFat = Math.round(item.fat * scaleFactor);
-      const newServing = scaleServing(item.serving, scaleFactor);
-      return { ...item, kcal: newKcal, prot: newProt, carb: newCarb, fat: newFat, serving: newServing };
-    });
-
-    // Rebuild items string with scaled portions
-    const scaledItems = scaledDetails.map(d =>
-      `${d.name} (${d.serving}) — ${d.prep}`
-    ).join(' · ');
-
-    const scaledKcal = scaledDetails.reduce((s, d) => s + d.kcal, 0);
-    const scaledProt = scaledDetails.reduce((s, d) => s + d.prot, 0);
-    const scaledCarb = scaledDetails.reduce((s, d) => s + d.carb, 0);
-    const scaledFat = scaledDetails.reduce((s, d) => s + d.fat, 0);
-
-    return {
-      ...meal,
-      items: scaledItems,
-      itemDetails: scaledDetails,
-      mealMacros: { kcal: scaledKcal, prot: scaledProt, carb: scaledCarb, fat: scaledFat },
-      adjusted: true,
-      targetKcal: perMeal.kcal
-    };
-  });
-
-  return { meals: adjustedMeals, target, consumed, remaining, perMeal, loggedIndexes };
+  // Fallback: return original meals unchanged (no bad scaling)
+  return { meals: originalMeals, target, consumed, remaining, perMeal: null, loggedIndexes };
 }
 
-/**
- * Scale a serving string by a factor.
- * "160g" * 1.5 = "240g"
- * "3 colheres" * 0.7 = "2 colheres"
- * "1 unidade" * 1.3 = "1.3 unidades"
- * "1/3 unidade" * 1.5 = "1/2 unidade"
- */
-function scaleServing(serving, factor) {
-  if (!serving || factor === 1) return serving;
+async function aiAdjust(ai, user, target, consumed, remaining, unloggedMeals, originalMeals) {
+  const userContext = `Perfil: ${user.sex === 'F' ? 'Mulher' : 'Homem'}, ${user.age} anos, ${user.weight}kg, ${user.height}cm. Dieta: ${user.diet_type}. Objetivo: ${user.diet_type === 'keto' ? 'cetose' : 'perda de peso com saude'}.`;
 
-  // Try "Xg" pattern
-  const gMatch = serving.match(/^(\d+)\s*g$/);
-  if (gMatch) {
-    return Math.round(Number(gMatch[1]) * factor) + 'g';
+  const consumedText = `Ja consumido hoje: ${consumed.kcal}kcal, ${consumed.prot}g prot, ${consumed.carb}g carb, ${consumed.fat}g gord.`;
+  const targetText = `Meta diaria: ${target.kcal}kcal, ${target.prot}g prot, ${target.carb}g carb, ${target.fat}g gord.`;
+  const remainingText = `Restante para o dia: ${remaining.kcal}kcal, ${remaining.prot}g prot, ${remaining.carb}g carb, ${remaining.fat}g gord.`;
+
+  const mealsText = unloggedMeals.map(m =>
+    `[index:${m.index}] ${m.name} (${m.time}) - Atual: ${m.items} - Macros atuais: ${m.mealMacros?.kcal || '?'}kcal`
+  ).join('\n');
+
+  const prompt = `${userContext}
+${targetText}
+${consumedText}
+${remainingText}
+
+Refeicoes restantes do dia (nao logadas):
+${mealsText}
+
+Reajuste SOMENTE as refeicoes que precisam mudar para que o dia fique equilibrado. Respeite as regras nutricionais.`;
+
+  const response = await ai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: ADJUSTER_PROMPT },
+      { role: 'user', content: prompt }
+    ],
+    temperature: 0.4,
+    max_tokens: 1500
+  });
+
+  const text = response.choices[0]?.message?.content?.trim();
+  if (!text) return null;
+
+  try {
+    const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const adjustedArr = JSON.parse(clean);
+    if (!Array.isArray(adjustedArr)) return null;
+
+    // Merge adjusted meals into originalMeals
+    const result = [...originalMeals];
+    for (const adj of adjustedArr) {
+      const idx = adj.mealIndex;
+      if (idx === undefined || idx < 0 || idx >= result.length) continue;
+
+      // Calculate totals from itemDetails
+      const details = adj.itemDetails || [];
+      const totalKcal = details.reduce((s, d) => s + (d.kcal || 0), 0);
+      const totalProt = details.reduce((s, d) => s + (d.prot || 0), 0);
+      const totalCarb = details.reduce((s, d) => s + (d.carb || 0), 0);
+      const totalFat = details.reduce((s, d) => s + (d.fat || 0), 0);
+
+      result[idx] = {
+        ...result[idx],
+        items: adj.items || result[idx].items,
+        itemDetails: details,
+        mealMacros: { kcal: totalKcal, prot: totalProt, carb: totalCarb, fat: totalFat },
+        adjusted: true,
+        targetKcal: totalKcal,
+        adjustNote: adj.adjustNote || null
+      };
+    }
+    return result;
+  } catch (e) {
+    process.stderr.write(`AI adjust parse error: ${e.message}\nRaw: ${text}\n`);
+    return null;
   }
-
-  // Try "X colheres" or "X fatias" etc
-  const numUnitMatch = serving.match(/^([\d.]+)\s+(.+)$/);
-  if (numUnitMatch) {
-    const num = Number(numUnitMatch[1]);
-    const unit = numUnitMatch[2];
-    const scaled = Math.round(num * factor * 10) / 10;
-    return `${scaled} ${unit}`;
-  }
-
-  // Try "1/X unidade"
-  const fracMatch = serving.match(/^(\d+)\/(\d+)\s+(.+)$/);
-  if (fracMatch) {
-    const frac = Number(fracMatch[1]) / Number(fracMatch[2]);
-    const scaled = Math.round(frac * factor * 10) / 10;
-    const unit = fracMatch[3];
-    return `${scaled} ${unit}`;
-  }
-
-  // Fallback: prefix with scale hint
-  if (factor > 1.2) return serving + ' (porcao maior)';
-  if (factor < 0.8) return serving + ' (porcao menor)';
-  return serving;
 }
