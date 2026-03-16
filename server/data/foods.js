@@ -43,6 +43,23 @@ export const FOODS = [
   { id:'raspberry', name:'Framboesas', serving:'80g', cat:'fruit', kcal:42, prot:1, carb:10, fat:0, diets:['N','K','IF'], tags:['gh'], slots:['cafe','lanche','ceia'], preps:['in natura'] },
   { id:'pear', name:'Pera', serving:'1 unidade', cat:'fruit', kcal:100, prot:1, carb:27, fat:0, diets:['N','IF'], tags:[], slots:['lanche'], preps:['in natura'] },
   { id:'watermelon', name:'Melancia', serving:'150g', cat:'fruit', kcal:45, prot:1, carb:11, fat:0, diets:['N','IF'], tags:[], slots:['lanche'], preps:['in natura'] },
+  // Frutas tropicais e comuns no Brasil
+  { id:'tangerine', name:'Tangerina', serving:'1 unidade', cat:'fruit', kcal:47, prot:1, carb:12, fat:0, diets:['N','IF'], tags:[], slots:['lanche','cafe'], preps:['in natura'] },
+  { id:'mango', name:'Manga', serving:'1/2 unidade', cat:'fruit', kcal:99, prot:1, carb:25, fat:0, diets:['N','IF'], tags:[], slots:['lanche','cafe'], preps:['in natura','em cubos'] },
+  { id:'papaya', name:'Mamao papaya', serving:'1/2 unidade', cat:'fruit', kcal:60, prot:1, carb:15, fat:0, diets:['N','IF'], tags:[], slots:['cafe','lanche'], preps:['in natura','com granola'] },
+  { id:'pineapple', name:'Abacaxi', serving:'2 fatias', cat:'fruit', kcal:50, prot:1, carb:13, fat:0, diets:['N','IF'], tags:[], slots:['lanche','ceia'], preps:['in natura','grelhado'] },
+  { id:'guava', name:'Goiaba', serving:'1 unidade', cat:'fruit', kcal:68, prot:3, carb:14, fat:1, diets:['N','IF'], tags:[], slots:['lanche','cafe'], preps:['in natura','com queijo branco'] },
+  { id:'passion_fruit', name:'Maracuja (polpa)', serving:'100g', cat:'fruit', kcal:97, prot:2, carb:23, fat:1, diets:['N','IF'], tags:[], slots:['lanche','ceia'], preps:['in natura','suco sem acucar'] },
+  { id:'grape', name:'Uva', serving:'1 cacho pequeno (100g)', cat:'fruit', kcal:69, prot:1, carb:18, fat:0, diets:['N','IF'], tags:['gh'], slots:['lanche','ceia'], preps:['in natura'] },
+  { id:'melon', name:'Melao', serving:'150g', cat:'fruit', kcal:51, prot:1, carb:12, fat:0, diets:['N','IF'], tags:[], slots:['lanche','cafe'], preps:['in natura','em cubos'] },
+  { id:'kiwi', name:'Kiwi', serving:'1 unidade', cat:'fruit', kcal:42, prot:1, carb:10, fat:0, diets:['N','IF'], tags:['gh'], slots:['lanche','ceia','cafe'], preps:['in natura'] },
+  { id:'persimmon', name:'Caqui', serving:'1 unidade', cat:'fruit', kcal:71, prot:1, carb:19, fat:0, diets:['N','IF'], tags:[], slots:['lanche'], preps:['in natura'] },
+  { id:'jabuticaba', name:'Jabuticaba', serving:'100g', cat:'fruit', kcal:58, prot:1, carb:14, fat:0, diets:['N','IF'], tags:['gh'], slots:['lanche'], preps:['in natura'] },
+  { id:'cashew_fruit', name:'Caju', serving:'1 unidade', cat:'fruit', kcal:43, prot:1, carb:10, fat:0, diets:['N','IF'], tags:[], slots:['lanche'], preps:['in natura','suco'] },
+  { id:'coconut', name:'Coco fresco', serving:'50g', cat:'fruit', kcal:177, prot:2, carb:8, fat:17, diets:['N','K','IF'], tags:[], slots:['lanche','cafe'], preps:['in natura','ralado'] },
+  { id:'plum', name:'Ameixa', serving:'2 unidades', cat:'fruit', kcal:46, prot:1, carb:11, fat:0, diets:['N','IF'], tags:[], slots:['lanche','ceia'], preps:['in natura'] },
+  { id:'lemon', name:'Limao (suco)', serving:'1 unidade', cat:'fruit', kcal:11, prot:0, carb:4, fat:0, diets:['N','K','IF'], tags:[], slots:['almoco','jantar','lanche'], preps:['suco na agua','temperando salada'] },
+  { id:'pomegranate', name:'Roma', serving:'1/2 unidade', cat:'fruit', kcal:65, prot:1, carb:16, fat:1, diets:['N','IF'], tags:['gh'], slots:['lanche'], preps:['in natura','sementes em salada'] },
 
   // CARBS
   { id:'brown_rice', name:'Arroz integral', serving:'3 colheres', cat:'carb', kcal:150, prot:3, carb:32, fat:1, diets:['N','IF'], tags:[], slots:['almoco','jantar'], preps:['cozido'] },

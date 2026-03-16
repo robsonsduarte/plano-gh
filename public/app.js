@@ -97,7 +97,7 @@ const QUIZ_QUESTIONS = [
 const FOOD_PREFERENCES = {
   'Proteinas': ['eggs','chicken','beef','salmon','tuna','tilapia','sardine','turkey','whey','greek_yogurt','cottage'],
   'Legumes e Verduras': ['broccoli','spinach','kale','beet','carrot','zucchini','bell_pepper','tomato','mushroom'],
-  'Frutas': ['banana','apple','strawberry','blueberry','orange','avocado','acai','cherry'],
+  'Frutas': ['banana','apple','strawberry','blueberry','orange','avocado','acai','cherry','tangerine','mango','papaya','pineapple','guava','passion_fruit','grape','melon','kiwi','coconut','watermelon'],
   'Carboidratos': ['brown_rice','oats','quinoa','sweet_potato','lentils','chickpeas','black_beans','whole_bread'],
   'Gorduras Boas': ['olive_oil','peanuts','mixed_nuts','peanut_butter','pumpkin_seeds','chia_seeds']
 };
@@ -111,6 +111,10 @@ const FOOD_NAMES = {
   tomato:'Tomate', mushroom:'Cogumelo',
   banana:'Banana', apple:'Maca', strawberry:'Morango', blueberry:'Mirtilos',
   orange:'Laranja', avocado:'Abacate', acai:'Acai', cherry:'Cereja',
+  tangerine:'Tangerina', mango:'Manga', papaya:'Mamao', pineapple:'Abacaxi',
+  guava:'Goiaba', passion_fruit:'Maracuja', grape:'Uva', melon:'Melao',
+  kiwi:'Kiwi', persimmon:'Caqui', jabuticaba:'Jabuticaba', cashew_fruit:'Caju',
+  coconut:'Coco', plum:'Ameixa', lemon:'Limao', pomegranate:'Roma', watermelon:'Melancia',
   brown_rice:'Arroz integral', oats:'Aveia', quinoa:'Quinoa',
   sweet_potato:'Batata-doce', lentils:'Lentilha', chickpeas:'Grao-de-bico',
   black_beans:'Feijao', whole_bread:'Pao integral',
