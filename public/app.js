@@ -790,9 +790,9 @@ function renderCardapio() {
         itemsList.forEach(item => {
           html += `<div class="meal-item">· ${esc(item)}</div>`;
         });
-        // Show per-meal target if adjusted
-        if (state.dayPerMeal && !isLogged) {
-          html += `<div class="meal-adjusted-note">Meta ajustada: ~${state.dayPerMeal.kcal} kcal para esta refeicao</div>`;
+        // Show adjustment note only on meals that were actually regenerated
+        if (meal.adjusted && meal.targetKcal) {
+          html += `<div class="meal-adjusted-note">Cardapio reajustado · meta: ~${meal.targetKcal} kcal</div>`;
         }
         html += `<button class="btn btn-primary btn-full" style="margin-top:8px" onclick="enterEditMode(${i})">Registrar o que comi</button>`;
         html += `</div>`;
@@ -1077,6 +1077,15 @@ async function confirmMeal(mealIndex) {
     state.editingMeal = null;
     state.editingItems = [];
     state.searchResults = [];
+
+    // Replace meals in the current plan with the adjusted ones from the backend
+    if (res.adjustedMeals && state.mealPlan?.days) {
+      const dayIdx = state.currentDay - 1;
+      if (state.mealPlan.days[dayIdx]) {
+        state.mealPlan.days[dayIdx].meals = res.adjustedMeals;
+      }
+    }
+
     renderCardapio();
   }
 }

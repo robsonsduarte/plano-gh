@@ -3,7 +3,7 @@ import authenticate from '../middleware/auth.js';
 import { query } from '../db.js';
 import { generateWeekPlan } from '../services/meal-generator.js';
 import { FOODS, DIET_RULES } from '../data/foods.js';
-import { resolveMacros, getConsumedMacros, getLoggedMealIndexes, calcRemainingTargets } from '../services/meal-adjuster.js';
+import { resolveMacros, getConsumedMacros, getLoggedMealIndexes, adjustDayMeals } from '../services/meal-adjuster.js';
 import { estimateFromText, estimateFromImage } from '../services/food-ai.js';
 
 const router = Router();
@@ -67,18 +67,15 @@ router.post('/log', async (req, res) => {
       [req.userId, date, weekNum || 1, dayNum || 1, mealIndex, mealType || '', originalItems || '', JSON.stringify(loggedItems), macros.kcal, macros.prot, macros.carb, macros.fat]
     );
 
-    // Calculate adjusted remaining
+    // Regenerate remaining meals with adjusted calorie budget
     const userResult = await query('SELECT * FROM users WHERE id = $1', [req.userId]);
     const user = userResult.rows[0];
-    const consumed = await getConsumedMacros(req.userId, date);
-    const loggedIndexes = await getLoggedMealIndexes(req.userId, date);
 
-    // Get total meals for this day from the plan
     const days = generateWeekPlan(user, weekNum || 1);
     const dayData = days[(dayNum || 1) - 1];
-    const totalMeals = dayData ? dayData.meals.length : 6;
+    const originalMeals = dayData ? dayData.meals : [];
 
-    const adjustment = calcRemainingTargets(user, consumed, totalMeals, loggedIndexes);
+    const adjustment = await adjustDayMeals(user, weekNum || 1, dayNum || 1, originalMeals);
 
     res.json({
       logged: { mealIndex, macros },
@@ -86,7 +83,8 @@ router.post('/log', async (req, res) => {
       target: adjustment.target,
       remaining: adjustment.remaining,
       perMeal: adjustment.perMeal,
-      loggedIndexes
+      loggedIndexes: adjustment.loggedIndexes,
+      adjustedMeals: adjustment.meals
     });
   } catch (err) {
     process.stderr.write(`Meal log error: ${err.message}\n`);
