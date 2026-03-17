@@ -636,6 +636,7 @@ function showPage(name) {
   if (page) page.classList.add('active');
 
   $$('.nbtn').forEach(b => b.classList.toggle('active', b.dataset.page === name));
+  $$('.ds-item').forEach(b => b.classList.toggle('active', b.dataset.page === name));
 
   // Show/hide header elements
   const showHeader = name === 'cardapio';
@@ -1697,6 +1698,11 @@ async function init() {
 
   // Bottom nav
   $$('.nbtn').forEach(btn => {
+    btn.addEventListener('click', () => showPage(btn.dataset.page));
+  });
+
+  // Desktop sidebar nav
+  $$('.ds-item').forEach(btn => {
     btn.addEventListener('click', () => showPage(btn.dataset.page));
   });
 

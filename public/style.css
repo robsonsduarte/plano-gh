@@ -66,7 +66,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 15px; -webkit-tap-highlight-color: transparent; }
 body {
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: 'Inter', 'DM Sans', system-ui, sans-serif;
   background: var(--bg-deep);
   color: var(--text-primary);
   min-height: 100vh;
@@ -74,7 +74,7 @@ body {
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
 }
-h1,h2,h3 { font-family: 'DM Serif Display', serif; font-weight: 400; }
+h1,h2,h3 { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.02em; }
 a { color: var(--accent); text-decoration: none; }
 img { max-width: 100%; }
 
@@ -257,7 +257,7 @@ textarea { resize: vertical; min-height: 60px; }
   border-bottom: 1px solid var(--border);
 }
 .h-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.h-title { font-family: 'DM Serif Display', serif; font-size: 1.3rem; color: var(--text-primary); }
+.h-title { font-family: 'Inter', system-ui, sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
 .theme-btn {
   background: none; border: none; cursor: pointer;
   padding: 6px; border-radius: 8px; transition: background .2s;
@@ -537,7 +537,7 @@ textarea { resize: vertical; min-height: 60px; }
 .nicon { font-size: 1.2rem; display: block; }
 
 /* === SECTION TITLE === */
-.section-title { font-size: 1.2rem; color: var(--text-primary); margin: 16px 0 10px; font-family: 'DM Serif Display', serif; }
+.section-title { font-size: 1.2rem; color: var(--text-primary); margin: 16px 0 10px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.02em; }
 
 /* === DIET BADGES === */
 .badge-normal { background: rgba(82,183,136,.12); color: var(--accent); }
@@ -552,11 +552,89 @@ textarea { resize: vertical; min-height: 60px; }
 }
 .edit-overlay h3 { margin-bottom: 12px; color: var(--text-primary); }
 
+/* Desktop sidebar — hidden on mobile */
+.desktop-sidebar { display: none; }
+
 /* === RESPONSIVE === */
 @media (min-width: 540px) {
   .bnav { border-radius: 16px 16px 0 0; }
   .auth-container { padding-top: 80px; }
   .food-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
+
+/* === DESKTOP LAYOUT (1024px+) === */
+@media (min-width: 1024px) {
+  /* Remove mobile max-width constraint */
+  html body div#app.app-container {
+    max-width: 100% !important;
+    border: none !important;
+    min-height: 100vh;
+  }
+
+  /* Header becomes topbar */
+  .header {
+    position: sticky; top: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px 0;
+  }
+
+  /* Day strip */
+  .day-strip {
+    padding: 0 32px 10px;
+  }
+
+  /* Main scroll area — wider, no bottom padding for nav */
+  .scroll {
+    padding: 28px 32px 48px;
+    max-width: 880px;
+    margin: 0 auto;
+  }
+
+  /* Hide bottom nav on desktop */
+  html body div.bnav#bottomNav {
+    display: none !important;
+  }
+
+  /* === SIDEBAR NAV (desktop) === */
+  .desktop-sidebar {
+    grid-area: sidebar;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    display: flex !important;
+    flex-direction: column;
+    position: sticky; top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .ds-brand {
+    display: flex; align-items: center; gap: 10px; padding: 20px 18px;
+    font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em;
+    border-bottom: 1px solid var(--border);
+  }
+  .ds-nav { flex: 1; padding: 12px 8px; display: flex; flex-direction: column; gap: 2px; }
+  .ds-item {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    padding: 10px 14px; border: none; background: transparent;
+    color: var(--text-secondary); font-size: .88rem; font-weight: 500;
+    border-radius: 10px; cursor: pointer; font-family: inherit; transition: all .15s;
+  }
+  .ds-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .ds-item.active { background: var(--accent-glow); color: var(--accent); font-weight: 600; }
+  .ds-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+
+  /* Meal cards in 2-col grid */
+  #page-cardapio .meal-card { break-inside: avoid; }
+
+  /* Hero card wider */
+  .hero { border-radius: 16px; }
+  .macros { gap: 24px; }
+  .macro-val { font-size: 1.5rem; }
+
+  /* Macro consumed row */
+  .macro-consumed { max-width: 480px; margin: 12px auto; }
+
+  /* Tip card beside meals */
+  .tip-card { max-width: 480px; }
 }
 
 /* === THEME TOGGLE === */
