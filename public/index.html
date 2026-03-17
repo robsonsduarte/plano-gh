@@ -16,7 +16,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=14">
+  <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css">
+  <link rel="stylesheet" href="style.css?v=15">
   <script>
     // v2: migrar usuarios antigos de dark para light
     if(!localStorage.getItem('theme_v2')){localStorage.setItem('theme','light');localStorage.setItem('theme_v2','1')}
@@ -172,12 +173,12 @@
         <span>Plano Dieta</span>
       </div>
       <nav class="ds-nav">
-        <button class="ds-item active" data-page="cardapio"><span class="ds-icon">🥗</span>Cardapio</button>
-        <button class="ds-item" data-page="perfil"><span class="ds-icon">👤</span>Perfil</button>
-        <button class="ds-item" data-page="tracking"><span class="ds-icon">📊</span>Evolucao</button>
-        <button class="ds-item" data-page="regras"><span class="ds-icon">📋</span>Regras</button>
-        <button class="ds-item" data-page="mercado"><span class="ds-icon">🛒</span>Mercado</button>
-        <button class="ds-item" data-page="config"><span class="ds-icon">⚙️</span>Config</button>
+        <button class="ds-item active" data-page="cardapio"><i class="lucide lucide-utensils"></i>Cardapio</button>
+        <button class="ds-item" data-page="perfil"><i class="lucide lucide-user"></i>Perfil</button>
+        <button class="ds-item" data-page="tracking"><i class="lucide lucide-trending-up"></i>Evolucao</button>
+        <button class="ds-item" data-page="regras"><i class="lucide lucide-clipboard-list"></i>Regras</button>
+        <button class="ds-item" data-page="mercado"><i class="lucide lucide-shopping-cart"></i>Mercado</button>
+        <button class="ds-item" data-page="config"><i class="lucide lucide-settings"></i>Config</button>
       </nav>
     </aside>
 
@@ -207,12 +208,12 @@
 
   <!-- BOTTOM NAV -->
   <div class="bnav" id="bottomNav" style="display:none">
-    <button class="nbtn active" data-page="cardapio"><span class="nicon">🥗</span>Cardapio</button>
-    <button class="nbtn" data-page="perfil"><span class="nicon">👤</span>Perfil</button>
-    <button class="nbtn" data-page="tracking"><span class="nicon">📊</span>Evolucao</button>
-    <button class="nbtn" data-page="regras"><span class="nicon">📋</span>Regras</button>
-    <button class="nbtn" data-page="mercado"><span class="nicon">🛒</span>Mercado</button>
-    <button class="nbtn" data-page="config"><span class="nicon">⚙️</span>Config</button>
+    <button class="nbtn active" data-page="cardapio"><i class="lucide lucide-utensils nicon"></i>Cardapio</button>
+    <button class="nbtn" data-page="perfil"><i class="lucide lucide-user nicon"></i>Perfil</button>
+    <button class="nbtn" data-page="tracking"><i class="lucide lucide-trending-up nicon"></i>Evolucao</button>
+    <button class="nbtn" data-page="regras"><i class="lucide lucide-clipboard-list nicon"></i>Regras</button>
+    <button class="nbtn" data-page="mercado"><i class="lucide lucide-shopping-cart nicon"></i>Mercado</button>
+    <button class="nbtn" data-page="config"><i class="lucide lucide-settings nicon"></i>Config</button>
   </div>
 
   <script src="app.js?v=11"></script>
