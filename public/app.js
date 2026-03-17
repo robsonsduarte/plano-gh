@@ -27,6 +27,12 @@ let state = {
   searchResults: [],     // food search results
 };
 
+// --- HELPERS ---
+function localDate() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 // --- CONSTANTS ---
 const DAY_NAMES = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
 const DAY_FULL = ['', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'];
@@ -1069,7 +1075,7 @@ async function confirmMeal(mealIndex) {
   }
 
   // 3. Call API
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDate();
   const reqBody = {
     date: today,
     weekNum: state.currentWeek,
@@ -1108,7 +1114,7 @@ async function confirmMeal(mealIndex) {
 }
 
 async function loadMealLogs() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDate();
   const data = await api('GET', `/meals/logs/${today}`);
   if (data && data.logs) {
     state.mealLogs = {};
@@ -1260,7 +1266,7 @@ function renderTracking() {
     <h2 class="section-title">Evolucao</h2>
     <div class="tracking-form">
       <h3>Novo registro</h3>
-      <div class="field"><label>Data</label><input type="date" id="tk-date" value="${new Date().toISOString().split('T')[0]}"></div>
+      <div class="field"><label>Data</label><input type="date" id="tk-date" value="${localDate()}"></div>
       <div class="field-row">
         <div class="field"><label>Peso (kg)</label><input type="number" id="tk-weight" step="0.1" placeholder="80.0"></div>
         <div class="field"><label>Cintura (cm)</label><input type="number" id="tk-waist" placeholder="85"></div>
@@ -1635,7 +1641,7 @@ function renderConfig() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `plano-dieta-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `plano-dieta-${localDate()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   });

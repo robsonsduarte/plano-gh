@@ -75,7 +75,7 @@ router.post('/log', async (req, res) => {
     const dayData = days[(dayNum || 1) - 1];
     const originalMeals = dayData ? dayData.meals : [];
 
-    const adjustment = await adjustDayMeals(user, weekNum || 1, dayNum || 1, originalMeals);
+    const adjustment = await adjustDayMeals(user, weekNum || 1, dayNum || 1, originalMeals, date);
 
     res.json({
       logged: { mealIndex, macros },

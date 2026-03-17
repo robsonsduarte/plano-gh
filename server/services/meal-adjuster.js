@@ -74,8 +74,8 @@ Retorne SOMENTE as refeicoes que precisam de ajuste. Nao retorne refeicoes que n
  * - Nutritional balance
  * - User's diet type and goal
  */
-export async function adjustDayMeals(user, weekNum, dayNum, originalMeals) {
-  const date = new Date().toISOString().split('T')[0];
+export async function adjustDayMeals(user, weekNum, dayNum, originalMeals, date) {
+  if (!date) { const d = new Date(); date = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
   const consumed = await getConsumedMacros(user.id, date);
   const loggedIndexes = await getLoggedMealIndexes(user.id, date);
 
