@@ -64,12 +64,12 @@ h2 { font-size: clamp(1.8rem, 3.5vw, 2.6rem); }
   font-weight: 500; transition: color .2s;
 }
 .ln-nav-links a:hover { color: var(--text); }
-.ln-btn-nav {
-  background: var(--accent); color: #fff; padding: 11px 28px; border-radius: 12px;
+a.ln-btn-nav, a.ln-btn-nav:visited {
+  background: var(--accent); color: #fff !important; padding: 11px 28px; border-radius: 14px;
   font-weight: 700; font-size: .88rem; text-decoration: none; transition: all .25s;
-  box-shadow: 0 2px 8px rgba(45,106,79,.2);
+  box-shadow: 0 4px 16px rgba(45,106,79,.2);
 }
-.ln-btn-nav:hover { background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(45,106,79,.28); }
+a.ln-btn-nav:hover { background: var(--accent-light); color: #fff !important; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(45,106,79,.28); }
 
 /* === HERO === */
 .ln-hero {
