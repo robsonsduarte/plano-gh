@@ -5,6 +5,7 @@ import { generateWeekPlan } from '../services/meal-generator.js';
 import { FOODS, DIET_RULES } from '../data/foods.js';
 import { resolveMacros, getConsumedMacros, getLoggedMealIndexes, adjustDayMeals } from '../services/meal-adjuster.js';
 import { estimateFromText, estimateFromImage } from '../services/food-ai.js';
+import { buildNutritionMemory } from '../services/nutrition-memory.js';
 
 const router = Router();
 router.use(authenticate);
@@ -113,6 +114,17 @@ router.get('/logs/:date', async (req, res) => {
   } catch (err) {
     process.stderr.write(`Get meal logs error: ${err.message}\n`);
     res.status(500).json({ error: 'Erro ao buscar registros' });
+  }
+});
+
+// GET /api/meals/memory — Nutritional memory summary
+router.get('/memory', async (req, res) => {
+  try {
+    const memory = await buildNutritionMemory(req.userId, 30);
+    res.json({ memory: memory || 'Sem historico suficiente ainda. Continue registrando suas refeicoes!' });
+  } catch (err) {
+    process.stderr.write(`Nutrition memory error: ${err.message}\n`);
+    res.status(500).json({ error: 'Erro ao carregar memoria nutricional' });
   }
 });
 

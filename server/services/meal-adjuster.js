@@ -2,6 +2,7 @@ import { FOODS } from '../data/foods.js';
 import { calcTMB, calcTDEE, calcMacros } from './nutrition.js';
 import { query } from '../db.js';
 import { chatCompletion, availableProviders } from './ai-client.js';
+import { buildNutritionMemory } from './nutrition-memory.js';
 
 export function resolveMacros(loggedItems) {
   let kcal = 0, prot = 0, carb = 0, fat = 0;
@@ -45,6 +46,14 @@ REGRAS OBRIGATORIAS:
 - Se o deficit e grande, distribuir em MAIS itens variados, nao inflar porcoes
 - Preferir alimentos brasileiros comuns e acessiveis
 - Se o objetivo e perda de peso e as calorias restantes sao altas, esta OK ficar ABAIXO da meta — nao force
+
+MEMORIA NUTRICIONAL (quando disponivel):
+- Voce recebera o historico do que a pessoa REALMENTE come
+- PRIORIZE alimentos que ela ja consome com frequencia — sao os que ela tem em casa e gosta
+- EVITE sugerir alimentos que nunca aparecem no historico (provavelmente nao gosta ou nao tem acesso)
+- Ajuste PORCOES com base no padrao real (se ela come 200kcal no lanche, nao sugira 400kcal)
+- Se o peso esta caindo, a estrategia esta funcionando — mantenha o padrao
+- Se o peso esta subindo, reduza calorias de forma sutil (10-15%) sem mudar drasticamente os alimentos
 
 Responda SOMENTE com JSON valido, sem markdown. Formato:
 [
@@ -105,7 +114,9 @@ export async function adjustDayMeals(user, weekNum, dayNum, originalMeals, date)
   // Try AI adjustment (OpenAI → Groq fallback)
   if (availableProviders().length > 0) {
     try {
-      const adjustedMeals = await aiAdjust(user, target, consumed, remaining, unloggedMeals, originalMeals);
+      // Build nutritional memory context (non-blocking — null if no history)
+      const memory = await buildNutritionMemory(user.id).catch(() => null);
+      const adjustedMeals = await aiAdjust(user, target, consumed, remaining, unloggedMeals, originalMeals, memory);
       if (adjustedMeals) {
         return { meals: adjustedMeals, target, consumed, remaining, perMeal: null, loggedIndexes };
       }
@@ -118,7 +129,7 @@ export async function adjustDayMeals(user, weekNum, dayNum, originalMeals, date)
   return { meals: originalMeals, target, consumed, remaining, perMeal: null, loggedIndexes };
 }
 
-async function aiAdjust(user, target, consumed, remaining, unloggedMeals, originalMeals) {
+async function aiAdjust(user, target, consumed, remaining, unloggedMeals, originalMeals, memory) {
   const userContext = `Perfil: ${user.sex === 'F' ? 'Mulher' : 'Homem'}, ${user.age} anos, ${user.weight}kg, ${user.height}cm. Dieta: ${user.diet_type}. Objetivo: ${user.diet_type === 'keto' ? 'cetose' : 'perda de peso com saude'}.`;
 
   const consumedText = `Ja consumido hoje: ${consumed.kcal}kcal, ${consumed.prot}g prot, ${consumed.carb}g carb, ${consumed.fat}g gord.`;
@@ -129,15 +140,21 @@ async function aiAdjust(user, target, consumed, remaining, unloggedMeals, origin
     `[index:${m.index}] ${m.name} (${m.time}) - Atual: ${m.items} - Macros atuais: ${m.mealMacros?.kcal || '?'}kcal`
   ).join('\n');
 
+  // Build prompt with nutritional memory when available
+  let memoryBlock = '';
+  if (memory) {
+    memoryBlock = `\n${memory}\n\nUSE essa memoria para:\n- Priorizar alimentos que a pessoa ja come e gosta\n- Evitar sugerir alimentos que nunca aparecem no historico\n- Ajustar porcoes com base no padrao real de consumo\n- Se a pessoa esta perdendo peso, manter a estrategia atual\n- Se esta ganhando peso indesejado, reduzir calorias sutilmente\n`;
+  }
+
   const prompt = `${userContext}
 ${targetText}
 ${consumedText}
 ${remainingText}
-
+${memoryBlock}
 Refeicoes restantes do dia (nao logadas):
 ${mealsText}
 
-Reajuste SOMENTE as refeicoes que precisam mudar para que o dia fique equilibrado. Respeite as regras nutricionais.`;
+Reajuste SOMENTE as refeicoes que precisam mudar para que o dia fique equilibrado. Respeite as regras nutricionais.${memory ? ' Use a memoria nutricional para personalizar as sugestoes.' : ''}`;
 
   const { text, provider } = await chatCompletion({
     messages: [
