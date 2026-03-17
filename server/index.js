@@ -11,6 +11,7 @@ import userRoutes from './routes/users.js';
 import mealRoutes from './routes/meals.js';
 import trackingRoutes from './routes/tracking.js';
 import marketRoutes from './routes/market.js';
+import adminRoutes from './routes/admin.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,9 +59,25 @@ app.use('/api/users', userRoutes);
 app.use('/api/meals', mealRoutes);
 app.use('/api/tracking', trackingRoutes);
 app.use('/api/market', marketRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', version: '2.0.0' });
+});
+
+// Landing page (public)
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'landing.html'));
+});
+
+// Admin panel
+app.get('/admin', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
+});
+
+// App (authenticated SPA)
+app.get('/app', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
 app.get('*', (_req, res) => {

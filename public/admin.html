@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin — Plano Dieta</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css?v=1">
+</head>
+<body>
+  <!-- LOGIN -->
+  <div id="admin-login" class="adm-login">
+    <div class="adm-login-card">
+      <h1>Admin</h1>
+      <p>Acesso restrito a administradores</p>
+      <form id="login-form">
+        <div class="adm-field">
+          <label for="adm-email">Email</label>
+          <input type="email" id="adm-email" placeholder="admin@email.com" required>
+        </div>
+        <div class="adm-field">
+          <label for="adm-password">Senha</label>
+          <input type="password" id="adm-password" required>
+        </div>
+        <div id="login-error" class="adm-error"></div>
+        <button type="submit" class="adm-btn adm-btn-primary">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div id="admin-panel" style="display:none">
+    <aside class="adm-sidebar">
+      <div class="adm-sidebar-brand">
+        <img src="/icon-192.png" alt="" width="28" height="28" style="border-radius:8px">
+        <span>Admin</span>
+      </div>
+      <nav class="adm-sidebar-nav">
+        <button class="adm-nav-item active" data-section="dashboard">Dashboard</button>
+        <button class="adm-nav-item" data-section="users">Usuarios</button>
+      </nav>
+      <div class="adm-sidebar-footer">
+        <button id="adm-logout" class="adm-nav-item">Sair</button>
+      </div>
+    </aside>
+
+    <main class="adm-main">
+      <!-- Dashboard -->
+      <section id="sec-dashboard" class="adm-section active">
+        <h2>Dashboard</h2>
+        <div class="adm-stats" id="stats-grid">
+          <div class="adm-stat-card">
+            <div class="adm-stat-value" id="stat-users">—</div>
+            <div class="adm-stat-label">Usuarios total</div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-value" id="stat-active">—</div>
+            <div class="adm-stat-label">Ativos (7 dias)</div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-value" id="stat-meals">—</div>
+            <div class="adm-stat-label">Refeicoes hoje</div>
+          </div>
+          <div class="adm-stat-card">
+            <div class="adm-stat-value" id="stat-subs">—</div>
+            <div class="adm-stat-label">Assinaturas ativas</div>
+          </div>
+          <div class="adm-stat-card adm-stat-highlight">
+            <div class="adm-stat-value" id="stat-mrr">—</div>
+            <div class="adm-stat-label">MRR estimado</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Users -->
+      <section id="sec-users" class="adm-section">
+        <div class="adm-section-header">
+          <h2>Usuarios</h2>
+          <input type="text" id="user-search" class="adm-search" placeholder="Buscar por nome ou email...">
+        </div>
+        <div id="users-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Dieta</th>
+                <th>Criado em</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+        <div class="adm-pagination" id="users-pagination"></div>
+      </section>
+
+      <!-- User Detail (overlay) -->
+      <div id="user-detail" class="adm-detail" style="display:none">
+        <div class="adm-detail-header">
+          <button class="adm-back" id="detail-back">&larr; Voltar</button>
+          <h2 id="detail-name">—</h2>
+        </div>
+        <div class="adm-detail-grid" id="detail-content"></div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // --- Admin SPA ---
+    let token = localStorage.getItem('admin_token');
+    const API = '/api';
+
+    async function api(method, path, body) {
+      const opts = { method, headers: { 'Content-Type': 'application/json' } };
+      if (token) opts.headers['Authorization'] = `Bearer ${token}`;
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(API + path, opts);
+      if (res.status === 401) { logout(); return null; }
+      if (res.status === 403) { alert('Acesso negado. Voce nao e administrador.'); logout(); return null; }
+      return res.json();
+    }
+
+    function $(sel) { return document.querySelector(sel); }
+    function $$(sel) { return document.querySelectorAll(sel); }
+
+    // Login
+    if (token) { showPanel(); } else { $('#admin-login').style.display = ''; }
+
+    $('#login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = $('#adm-email').value.trim();
+      const password = $('#adm-password').value;
+      const res = await fetch(API + '/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.token) {
+        token = data.token;
+        localStorage.setItem('admin_token', token);
+        showPanel();
+      } else {
+        $('#login-error').textContent = data.error || 'Erro ao entrar';
+      }
+    });
+
+    function logout() {
+      token = null;
+      localStorage.removeItem('admin_token');
+      location.reload();
+    }
+    $('#adm-logout').addEventListener('click', logout);
+
+    async function showPanel() {
+      $('#admin-login').style.display = 'none';
+      $('#admin-panel').style.display = '';
+      await loadDashboard();
+    }
+
+    // Navigation
+    $$('.adm-nav-item[data-section]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        $$('.adm-nav-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        $$('.adm-section').forEach(s => s.classList.remove('active'));
+        const sec = $(`#sec-${btn.dataset.section}`);
+        if (sec) sec.classList.add('active');
+        $('#user-detail').style.display = 'none';
+        if (btn.dataset.section === 'dashboard') loadDashboard();
+        if (btn.dataset.section === 'users') loadUsers();
+      });
+    });
+
+    // Dashboard
+    async function loadDashboard() {
+      const data = await api('GET', '/admin/dashboard');
+      if (!data) return;
+      $('#stat-users').textContent = data.totalUsers;
+      $('#stat-active').textContent = data.activeUsers7d;
+      $('#stat-meals').textContent = data.mealsLoggedToday;
+      $('#stat-subs').textContent = data.activeSubscriptions;
+      $('#stat-mrr').textContent = `R$ ${data.estimatedMRR.toFixed(2).replace('.', ',')}`;
+    }
+
+    // Users
+    let usersPage = 1;
+    async function loadUsers(page = 1, q = '') {
+      usersPage = page;
+      const search = q || $('#user-search').value.trim();
+      const data = await api('GET', `/admin/users?page=${page}&limit=20&q=${encodeURIComponent(search)}`);
+      if (!data) return;
+      const tbody = $('#users-tbody');
+      tbody.innerHTML = data.users.map(u => `
+        <tr>
+          <td>${u.id}</td>
+          <td>${esc(u.name)}</td>
+          <td>${esc(u.email)}</td>
+          <td><span class="adm-badge">${u.diet_type || '—'}</span></td>
+          <td>${new Date(u.created_at).toLocaleDateString('pt-BR')}</td>
+          <td><button class="adm-btn-sm" onclick="viewUser(${u.id})">Ver</button></td>
+        </tr>
+      `).join('');
+
+      const pg = data.pagination;
+      const pgEl = $('#users-pagination');
+      let pgHtml = '';
+      for (let i = 1; i <= pg.pages; i++) {
+        pgHtml += `<button class="adm-pg-btn${i === pg.page ? ' active' : ''}" onclick="loadUsers(${i})">${i}</button>`;
+      }
+      pgEl.innerHTML = pgHtml;
+    }
+
+    let searchTimer;
+    $('#user-search').addEventListener('input', (e) => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => loadUsers(1, e.target.value), 300);
+    });
+
+    async function viewUser(id) {
+      const data = await api('GET', `/admin/users/${id}`);
+      if (!data) return;
+      const u = data.user;
+      $('#detail-name').textContent = u.name;
+      const sub = data.subscription;
+      $('#detail-content').innerHTML = `
+        <div class="adm-detail-card">
+          <h3>Perfil</h3>
+          <div class="adm-kv"><span>Email</span><span>${esc(u.email)}</span></div>
+          <div class="adm-kv"><span>Sexo</span><span>${u.sex || '—'}</span></div>
+          <div class="adm-kv"><span>Idade</span><span>${u.age || '—'}</span></div>
+          <div class="adm-kv"><span>Peso</span><span>${u.weight ? u.weight + ' kg' : '—'}</span></div>
+          <div class="adm-kv"><span>Altura</span><span>${u.height ? u.height + ' cm' : '—'}</span></div>
+          <div class="adm-kv"><span>Dieta</span><span>${u.diet_type || '—'}</span></div>
+          <div class="adm-kv"><span>Atividade</span><span>${u.activity_level || '—'}</span></div>
+          <div class="adm-kv"><span>Role</span><span>${u.role || 'user'}</span></div>
+          <div class="adm-kv"><span>Criado</span><span>${new Date(u.created_at).toLocaleDateString('pt-BR')}</span></div>
+        </div>
+        <div class="adm-detail-card">
+          <h3>Assinatura</h3>
+          ${sub ? `
+            <div class="adm-kv"><span>Plano</span><span>${sub.plan === 'annual' ? 'Anual' : 'Mensal'}</span></div>
+            <div class="adm-kv"><span>Status</span><span class="adm-badge adm-badge-${sub.status}">${sub.status}</span></div>
+            <div class="adm-kv"><span>Valor</span><span>R$ ${(sub.price_cents / 100).toFixed(2).replace('.', ',')}</span></div>
+            <div class="adm-kv"><span>Expira</span><span>${new Date(sub.expires_at).toLocaleDateString('pt-BR')}</span></div>
+          ` : '<p style="color:var(--text-muted)">Sem assinatura ativa</p>'}
+        </div>
+        <div class="adm-detail-card adm-detail-wide">
+          <h3>Refeicoes recentes</h3>
+          ${data.recentMealLogs.length ? `
+            <table class="adm-table adm-table-sm">
+              <thead><tr><th>Data</th><th>Tipo</th><th>Kcal</th></tr></thead>
+              <tbody>${data.recentMealLogs.map(l => `
+                <tr><td>${new Date(l.date).toLocaleDateString('pt-BR')}</td><td>${l.meal_type}</td><td>${l.total_kcal}</td></tr>
+              `).join('')}</tbody>
+            </table>
+          ` : '<p style="color:var(--text-muted)">Nenhum log</p>'}
+        </div>
+        <div class="adm-detail-card adm-detail-wide">
+          <h3>Tracking recente</h3>
+          ${data.recentTracking.length ? `
+            <table class="adm-table adm-table-sm">
+              <thead><tr><th>Data</th><th>Peso</th><th>Cintura</th><th>Energia</th><th>Sono</th></tr></thead>
+              <tbody>${data.recentTracking.map(t => `
+                <tr><td>${new Date(t.date).toLocaleDateString('pt-BR')}</td><td>${t.weight || '—'}</td><td>${t.waist || '—'}</td><td>${t.energy || '—'}/5</td><td>${t.sleep_quality || '—'}/5</td></tr>
+              `).join('')}</tbody>
+            </table>
+          ` : '<p style="color:var(--text-muted)">Nenhum registro</p>'}
+        </div>
+      `;
+      $$('.adm-section').forEach(s => s.classList.remove('active'));
+      $('#user-detail').style.display = '';
+    }
+
+    $('#detail-back').addEventListener('click', () => {
+      $('#user-detail').style.display = 'none';
+      $('#sec-users').classList.add('active');
+    });
+
+    function esc(str) {
+      const el = document.createElement('span');
+      el.textContent = str || '';
+      return el.innerHTML;
+    }
+  </script>
+</body>
+</html>
