@@ -569,6 +569,11 @@ function buildWeekTabs() {
       btn.classList.add('active');
       state.mealPlan = null;
       state.marketData = null;
+      state.mealLogs = {};
+      state.loggedIndexes = [];
+      state.dayConsumed = null;
+      state.dayRemaining = null;
+      state.dayPerMeal = null;
       loadAndRenderCurrentPage();
     });
     container.appendChild(btn);
@@ -588,11 +593,21 @@ function buildDayStrip() {
       if (fastingDays.includes(d)) label += ' <span class="fasting-dot">⚡</span>';
     }
     btn.innerHTML = label;
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       state.currentDay = d;
       container.querySelectorAll('.dpill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.openMeal = -1;
+      const todayDow = new Date().getDay() || 7;
+      if (d === todayDow) {
+        await loadMealLogs();
+      } else {
+        state.mealLogs = {};
+        state.loggedIndexes = [];
+        state.dayConsumed = null;
+        state.dayRemaining = null;
+        state.dayPerMeal = null;
+      }
       renderCardapio();
     });
     container.appendChild(btn);
