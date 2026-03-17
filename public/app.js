@@ -33,13 +33,16 @@ function localDate() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-// Date for any day-of-week (1=Mon..7=Sun) in the current week
-function dateForDay(dayOfWeek) {
+// Date for any day-of-week (1=Mon..7=Sun) considering which week of the plan we're viewing.
+// Week 1 = current real week, Week 2 = next week, etc.
+function dateForDay(dayOfWeek, weekNum) {
+  const week = weekNum || state.currentWeek;
   const now = new Date();
   const todayDow = now.getDay() || 7; // 1=Mon..7=Sun
   const diff = dayOfWeek - todayDow;
+  const weekOffset = (week - 1) * 7; // Sem 1 = 0, Sem 2 = +7, Sem 3 = +14, Sem 4 = +21
   const target = new Date(now);
-  target.setDate(target.getDate() + diff);
+  target.setDate(target.getDate() + diff + weekOffset);
   return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
 }
 
