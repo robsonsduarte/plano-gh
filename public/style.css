@@ -564,20 +564,17 @@ textarea { resize: vertical; min-height: 60px; }
 
 /* === DESKTOP LAYOUT (1024px+) === */
 @media (min-width: 1024px) {
-  /* Grid: sidebar fixed left, rest flows right */
+  /* Remove mobile constraints */
   html body div#app.app-container {
     max-width: 100% !important;
     border: none !important;
-    display: flex !important;
-    min-height: 100vh;
   }
 
-  /* === SIDEBAR NAV === */
+  /* Sidebar fixed left */
   .desktop-sidebar {
     display: flex !important;
     flex-direction: column;
     width: 230px;
-    min-width: 230px;
     background: var(--bg-card);
     border-right: 1px solid var(--border);
     position: fixed; top: 0; left: 0; bottom: 0;
@@ -600,48 +597,35 @@ textarea { resize: vertical; min-height: 60px; }
   .ds-item.active { background: var(--accent-glow); color: var(--accent); font-weight: 600; }
   .ds-icon { font-size: 1.1rem; width: 24px; text-align: center; }
 
-  /* Content area — offset by sidebar width */
-  .header,
-  .day-strip,
-  .scroll {
+  /* Content wrapper — takes remaining space */
+  .app-content {
     margin-left: 230px;
+    min-height: 100vh;
   }
 
   /* Header topbar */
-  .header {
-    position: sticky; top: 0;
-    padding: 12px 32px 0;
-    width: calc(100% - 230px);
-  }
+  .header { padding: 12px 32px 0; }
 
   /* Day strip */
-  .day-strip {
-    padding: 0 32px 10px;
-    width: calc(100% - 230px);
-  }
+  .day-strip { padding: 0 32px 10px; }
 
-  /* Main scroll area */
+  /* Scroll area — no extra bottom padding */
   .scroll {
     padding: 28px 32px 48px;
-    width: calc(100% - 230px);
+    max-width: 880px;
+    margin: 0 auto;
   }
-  /* Center content within scroll */
-  .page { max-width: 880px; margin: 0 auto; }
 
   /* Hide bottom nav */
-  html body div.bnav#bottomNav {
-    display: none !important;
-  }
+  html body div.bnav#bottomNav { display: none !important; }
 
-  /* Hide duplicate brand in header since sidebar has it */
+  /* Hide duplicate brand in header */
   .h-title { display: none; }
 
-  /* Hero card */
+  /* Better proportions on desktop */
   .hero { border-radius: 16px; }
   .macros { gap: 24px; }
   .macro-val { font-size: 1.5rem; }
-  .macro-consumed { max-width: 520px; margin: 12px auto; }
-  .tip-card { max-width: 520px; }
 }
 
 /* === THEME TOGGLE === */
