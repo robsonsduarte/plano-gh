@@ -4,3 +4,11 @@ node_modules/
 .DS_Store
 VERIFICATION.md
 SHADOW-REPORT.md
+
+# DuarteOS — configs pessoais (nao versionar)
+# DuarteOS — configs pessoais (nao versionar)
+.claude/config/user.yaml
+.claude/settings.local.json
+.env.local
+.mcp.json
+.env.agents
