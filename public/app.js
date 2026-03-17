@@ -33,6 +33,16 @@ function localDate() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+// Date for any day-of-week (1=Mon..7=Sun) in the current week
+function dateForDay(dayOfWeek) {
+  const now = new Date();
+  const todayDow = now.getDay() || 7; // 1=Mon..7=Sun
+  const diff = dayOfWeek - todayDow;
+  const target = new Date(now);
+  target.setDate(target.getDate() + diff);
+  return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
+}
+
 // --- CONSTANTS ---
 const DAY_NAMES = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
 const DAY_FULL = ['', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'];
@@ -604,16 +614,7 @@ function buildDayStrip() {
       container.querySelectorAll('.dpill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.openMeal = -1;
-      const todayDow = new Date().getDay() || 7;
-      if (d === todayDow) {
-        await loadMealLogs();
-      } else {
-        state.mealLogs = {};
-        state.loggedIndexes = [];
-        state.dayConsumed = null;
-        state.dayRemaining = null;
-        state.dayPerMeal = null;
-      }
+      await loadMealLogs(dateForDay(d));
       renderCardapio();
     });
     container.appendChild(btn);
@@ -1076,9 +1077,9 @@ async function confirmMeal(mealIndex) {
   }
 
   // 3. Call API
-  const today = localDate();
+  const mealDate = dateForDay(state.currentDay);
   const reqBody = {
-    date: today,
+    date: mealDate,
     weekNum: state.currentWeek,
     dayNum: state.currentDay,
     mealIndex,
@@ -1114,9 +1115,9 @@ async function confirmMeal(mealIndex) {
   }
 }
 
-async function loadMealLogs() {
-  const today = localDate();
-  const data = await api('GET', `/meals/logs/${today}`);
+async function loadMealLogs(date) {
+  const d = date || dateForDay(state.currentDay);
+  const data = await api('GET', `/meals/logs/${d}`);
   if (data && data.logs) {
     state.mealLogs = {};
     for (const log of data.logs) {
