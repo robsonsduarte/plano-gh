@@ -819,7 +819,10 @@ function renderCardapio() {
           const mealTotal = meal.mealMacros?.kcal || '';
           html += `<div class="meal-adjusted-note">🤖 ${esc(note)}${mealTotal ? ` · ~${mealTotal} kcal` : ''}</div>`;
         }
-        html += `<button class="btn btn-primary btn-full" style="margin-top:8px" onclick="enterEditMode(${i})">Registrar o que comi</button>`;
+        html += `<div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-primary" style="flex:1" onclick="confirmSuggested(${i})">Comi isso</button>
+          <button class="btn btn-secondary" style="flex:1" onclick="enterEditMode(${i})">Editar refeicao</button>
+        </div>`;
         html += `</div>`;
       }
 
@@ -846,6 +849,28 @@ function toggleMeal(i) {
 }
 
 // --- MEAL LOGGING ---
+
+// Confirm suggested meal as-is (log without editing)
+async function confirmSuggested(mealIndex) {
+  const days = state.mealPlan?.days || [];
+  const dayData = days[state.currentDay - 1];
+  const meal = dayData?.meals?.[mealIndex];
+  if (!meal) return;
+
+  // Use itemDetails if available, otherwise build from items string
+  let items;
+  if (meal.itemDetails && meal.itemDetails.length) {
+    items = meal.itemDetails.map(d => ({ ...d }));
+  } else {
+    const parts = (meal.items || '').split(' · ').filter(Boolean);
+    items = parts.map(p => ({ foodId: null, name: p, serving: '', prep: '', kcal: 0, prot: 0, carb: 0, fat: 0 }));
+  }
+
+  state.editingItems = items;
+  state.editingMeal = mealIndex;
+  await confirmMeal(mealIndex);
+}
+
 function enterEditMode(mealIndex) {
   const days = state.mealPlan?.days || [];
   const dayData = days[state.currentDay - 1];
