@@ -536,7 +536,7 @@ textarea { resize: vertical; min-height: 60px; }
   cursor: pointer; transition: color .2s;
 }
 .nbtn.active { color: var(--accent); }
-.nicon { font-size: 1.1rem; display: block; line-height: 1; }
+.nicon { width: 20px; height: 20px; display: block; }
 
 /* === SECTION TITLE === */
 .section-title { font-size: 1.2rem; color: var(--text-primary); margin: 16px 0 10px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.02em; }
@@ -597,7 +597,7 @@ textarea { resize: vertical; min-height: 60px; }
   }
   .ds-item:hover { background: var(--bg-hover); color: var(--text-primary); }
   .ds-item.active { background: var(--accent-glow); color: var(--accent); font-weight: 600; }
-  .ds-item .lucide { font-size: 1.1rem; width: 20px; text-align: center; flex-shrink: 0; }
+  .ds-ico { width: 18px; height: 18px; flex-shrink: 0; }
 
   /* Content wrapper — takes remaining space */
   .app-content {
