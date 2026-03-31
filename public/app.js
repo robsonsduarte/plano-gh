@@ -28,22 +28,55 @@ let state = {
 };
 
 // --- HELPERS ---
-function localDate() {
-  const d = new Date();
+function formatDate(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function localDate() {
+  return formatDate(new Date());
+}
+
+// Compute which plan week (1-4) the user is on, cycling after 4
+function computeCurrentWeek(planStartDate) {
+  if (!planStartDate) return 1;
+  const start = new Date(planStartDate + 'T00:00:00');
+  const now = new Date();
+  start.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+  const diffMs = now - start;
+  const diffWeeks = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000));
+  return (diffWeeks % 4) + 1;
+}
+
 // Date for any day-of-week (1=Mon..7=Sun) considering which week of the plan we're viewing.
-// Week 1 = current real week, Week 2 = next week, etc.
+// Uses plan_start_date to map weeks to absolute calendar dates.
 function dateForDay(dayOfWeek, weekNum) {
   const week = weekNum || state.currentWeek;
+  const planStart = state.user?.plan_start_date;
+
+  if (!planStart) {
+    // Legacy fallback: week 1 = current real week
+    const now = new Date();
+    const todayDow = now.getDay() || 7;
+    const diff = dayOfWeek - todayDow;
+    const weekOffset = (week - 1) * 7;
+    const target = new Date(now);
+    target.setDate(target.getDate() + diff + weekOffset);
+    return formatDate(target);
+  }
+
+  // plan_start_date is always a Monday
+  const start = new Date(planStart + 'T00:00:00');
+  start.setHours(0, 0, 0, 0);
   const now = new Date();
-  const todayDow = now.getDay() || 7; // 1=Mon..7=Sun
-  const diff = dayOfWeek - todayDow;
-  const weekOffset = (week - 1) * 7; // Sem 1 = 0, Sem 2 = +7, Sem 3 = +14, Sem 4 = +21
-  const target = new Date(now);
-  target.setDate(target.getDate() + diff + weekOffset);
-  return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
+  now.setHours(0, 0, 0, 0);
+  const diffMs = now - start;
+  const elapsedWeeks = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000));
+  const currentCycleStart = elapsedWeeks - (elapsedWeeks % 4); // absolute week index of Sem 1 in current cycle
+  const absoluteWeek = currentCycleStart + (week - 1);
+  const target = new Date(start);
+  target.setDate(target.getDate() + (absoluteWeek * 7) + (dayOfWeek - 1));
+  return formatDate(target);
 }
 
 // --- CONSTANTS ---
@@ -300,6 +333,17 @@ async function afterAuth() {
     state.user = data.user || data;
   }
   const u = state.user;
+
+  // Legacy migration: set plan_start_date for existing users who completed onboarding
+  if (u.diet_type && u.quiz_result?.recommended && !u.plan_start_date) {
+    const updated = await api('PUT', '/users/me/plan-start');
+    if (updated && !updated._error) {
+      state.user = updated.user || updated;
+    }
+  }
+
+  state.currentWeek = computeCurrentWeek(state.user.plan_start_date);
+
   if (!u.diet_type || !u.quiz_result?.recommended) {
     showOnboarding();
   } else {
@@ -555,10 +599,17 @@ async function finishOnboarding(dietType, quizResult) {
   ]);
 
   if (profileRes && !profileRes._error) {
-    state.user = profileRes.user || profileRes;
+    // Re-fetch user to get plan_start_date set by quiz endpoint
+    const freshUser = await api('GET', '/users/me');
+    if (freshUser && !freshUser._error) {
+      state.user = freshUser.user || freshUser;
+    } else {
+      state.user = profileRes.user || profileRes;
+    }
     // Ensure diet_type and quiz_result are set
     state.user.diet_type = dietType;
     state.user.quiz_result = quizResult;
+    state.currentWeek = computeCurrentWeek(state.user.plan_start_date);
     showApp();
   }
 }

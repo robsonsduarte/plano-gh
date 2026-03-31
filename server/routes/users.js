@@ -189,7 +189,7 @@ router.put('/me/quiz', async (req, res) => {
     }
 
     const dbResult = await query(
-      'UPDATE users SET quiz_answers = $1, quiz_result = $2, updated_at = NOW() WHERE id = $3 RETURNING *',
+      'UPDATE users SET quiz_answers = $1, quiz_result = $2, plan_start_date = COALESCE(plan_start_date, date_trunc(\'week\', CURRENT_DATE)::date), updated_at = NOW() WHERE id = $3 RETURNING *',
       [JSON.stringify(answers), JSON.stringify(quizResult), req.userId]
     );
 
@@ -197,6 +197,32 @@ router.put('/me/quiz', async (req, res) => {
   } catch (err) {
     process.stderr.write(`Update quiz error: ${err.message}\n`);
     res.status(500).json({ error: 'Erro ao salvar quiz' });
+  }
+});
+
+// PUT /api/users/me/plan-start — set plan start date
+// For legacy users: uses the Monday of their earliest meal_log (preserves history)
+// With ?reset=true: forces to current week Monday (restart plan)
+router.put('/me/plan-start', async (req, res) => {
+  try {
+    const forceReset = req.query.reset === 'true';
+    let sql;
+
+    if (forceReset) {
+      sql = `UPDATE users SET plan_start_date = date_trunc('week', CURRENT_DATE)::date, updated_at = NOW() WHERE id = $1 RETURNING *`;
+    } else {
+      // Use earliest meal_log date to preserve user's history, fallback to current week
+      sql = `UPDATE users SET plan_start_date = COALESCE(
+        (SELECT date_trunc('week', MIN(date))::date FROM meal_logs WHERE user_id = $1),
+        date_trunc('week', CURRENT_DATE)::date
+      ), updated_at = NOW() WHERE id = $1 RETURNING *`;
+    }
+
+    const result = await query(sql, [req.userId]);
+    res.json(sanitizeUser(result.rows[0]));
+  } catch (err) {
+    process.stderr.write(`Set plan start error: ${err.message}\n`);
+    res.status(500).json({ error: 'Erro ao definir inicio do plano' });
   }
 });
 
