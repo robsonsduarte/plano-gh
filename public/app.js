@@ -36,10 +36,17 @@ function localDate() {
   return formatDate(new Date());
 }
 
+// Extract YYYY-MM-DD from ISO date string (handles "2026-03-16T03:00:00.000Z" and "2026-03-16")
+function toDateOnly(isoStr) {
+  if (!isoStr) return null;
+  return String(isoStr).slice(0, 10);
+}
+
 // Compute which plan week (1-4) the user is on, cycling after 4
 function computeCurrentWeek(planStartDate) {
-  if (!planStartDate) return 1;
-  const start = new Date(planStartDate + 'T00:00:00');
+  const dateStr = toDateOnly(planStartDate);
+  if (!dateStr) return 1;
+  const start = new Date(dateStr + 'T00:00:00');
   const now = new Date();
   start.setHours(0, 0, 0, 0);
   now.setHours(0, 0, 0, 0);
@@ -66,7 +73,8 @@ function dateForDay(dayOfWeek, weekNum) {
   }
 
   // plan_start_date is always a Monday
-  const start = new Date(planStart + 'T00:00:00');
+  const startStr = toDateOnly(planStart);
+  const start = new Date(startStr + 'T00:00:00');
   start.setHours(0, 0, 0, 0);
   const now = new Date();
   now.setHours(0, 0, 0, 0);
